@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DrawWall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #09070f;
+      background-image:
+        radial-gradient(ellipse at 30% 20%, rgba(80,40,120,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 80%, rgba(40,20,80,0.14) 0%, transparent 50%);
+      font-family: 'Press Start 2P', monospace;
+      overflow: hidden;
+      user-select: none;
+      color: #d4c9a8;
+    }
+
+    /* Floating stars */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 12% 18%, rgba(255,230,160,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 34% 7%,  rgba(255,255,220,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 22%, rgba(200,180,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 72% 5%,  rgba(255,220,160,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 88% 15%, rgba(180,200,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 22% 42%, rgba(255,240,180,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 65% 38%, rgba(220,180,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 91% 45%, rgba(255,220,140,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 8%  70%, rgba(180,220,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 48% 68%, rgba(255,200,160,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 78% 72%, rgba(200,160,255,0.4) 0%, transparent 100%),
+        radial-gradient(1px 1px at 38% 88%, rgba(255,240,160,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 60% 90%, rgba(180,255,200,0.4) 0%, transparent 100%),
+        radial-gradient(2px 2px at 18% 55%, rgba(255,220,100,0.3) 0%, transparent 100%),
+        radial-gradient(2px 2px at 82% 60%, rgba(200,160,255,0.3) 0%, transparent 100%);
+      animation: star-twinkle 6s ease-in-out infinite alternate;
+    }
+    @keyframes star-twinkle {
+      0%   { opacity: 0.6; }
+      50%  { opacity: 1; }
+      100% { opacity: 0.7; }
+    }
+
+    #canvas { position: fixed; top: 0; left: 0; display: block; cursor: crosshair; }
+
+    /* ── Sidebar ── */
+    #sidebar {
+      position: fixed; top: 0; left: 0;
+      width: 200px; height: 100vh;
+      background: #0d0b18;
+      border-right: 2px solid #c8853a;
+      box-shadow: 4px 0 28px rgba(200,133,58,0.2), inset -1px 0 0 rgba(255,200,80,0.06);
+      display: flex; flex-direction: column; gap: 10px;
+      padding: 12px 8px;
+      overflow-y: auto; z-index: 100;
+    }
+    #sidebar::-webkit-scrollbar { width: 3px; }
+    #sidebar::-webkit-scrollbar-thumb { background: #c8853a; }
+
+    h1 {
+      font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase;
+      text-align: center; padding: 4px 0;
+      animation: magic-glow 5s ease-in-out infinite;
+    }
+    @keyframes magic-glow {
+      0%   { color:#f0c040; text-shadow:0 0 10px rgba(240,192,64,0.9), 0 0 26px rgba(240,192,64,0.4); }
+      25%  { color:#f08030; text-shadow:0 0 10px rgba(240,128,48,0.9), 0 0 26px rgba(240,128,48,0.4); }
+      50%  { color:#c060e8; text-shadow:0 0 10px rgba(192,96,232,0.9), 0 0 26px rgba(192,96,232,0.4); }
+      75%  { color:#50c878; text-shadow:0 0 10px rgba(80,200,120,0.9), 0 0 26px rgba(80,200,120,0.4); }
+      100% { color:#f0c040; text-shadow:0 0 10px rgba(240,192,64,0.9), 0 0 26px rgba(240,192,64,0.4); }
+    }
+
+    .lbl {
+      font-size: 0.42rem; text-transform: uppercase; letter-spacing: 2px;
+      color: #3a3028; margin-bottom: 4px;
+    }
+    /* Fantasy section labels */
+    #sidebar > div:nth-child(2) .lbl { color: #f08030; text-shadow: 0 0 6px rgba(240,128,48,0.5); }  /* torch */
+    #sidebar > div:nth-child(3) .lbl { color: #f0c040; text-shadow: 0 0 6px rgba(240,192,64,0.5); }  /* gold */
+    #sidebar > div:nth-child(4) .lbl { color: #50c878; text-shadow: 0 0 6px rgba(80,200,120,0.5); }  /* emerald */
+    #sidebar > div:nth-child(5) .lbl { color: #c060e8; text-shadow: 0 0 6px rgba(192,96,232,0.5); }  /* arcane */
+    #users-wrap .lbl             { color: #60b8f0; text-shadow: 0 0 6px rgba(96,184,240,0.5); }       /* crystal */
+
+    /* ── Tool buttons ── */
+    #tools { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+    .tool-btn {
+      padding: 8px 4px 6px;
+      border: 2px solid #2a2030; background: #120f1e; color: #5a4a3a;
+      cursor: pointer; font-size: 0.38rem; font-family: 'Press Start 2P', monospace;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      box-shadow: 3px 3px 0 #080510;
+      transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
+    }
+    .tool-btn svg { width: 14px; height: 14px; }
+    .tool-btn:hover { color: #c8a870; background: #1a1428; }
+    .tool-btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 #080510; }
+    .tool-btn.active { color: #fff; }
+    .tool-btn[data-tool="pen"].active {
+      border-color: #f0c040; background: #1a1200; box-shadow: 3px 3px 0 #604800;
+      text-shadow: 0 0 8px rgba(240,192,64,0.9);
+    }
+    .tool-btn[data-tool="eraser"].active {
+      border-color: #c060e8; background: #150a20; box-shadow: 3px 3px 0 #4a2060;
+      text-shadow: 0 0 8px rgba(192,96,232,0.9);
+    }
+
+    /* ── Palette ── */
+    #palette { display: grid; grid-template-columns: repeat(6,1fr); gap: 2px; }
+    .sw {
+      aspect-ratio:1; cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.06s; image-rendering: pixelated;
+    }
+    .sw:hover { transform: scale(1.18); z-index:1; position:relative; }
+    .sw.on { border-color: #f0c040; box-shadow: 0 0 10px rgba(240,192,64,0.8); }
+
+    #cc-row { margin-top: 4px; display: flex; align-items: center; gap: 6px; }
+    #cc { width: 24px; height: 18px; border: 2px solid #333; cursor: pointer; padding: 0; }
+    #cc-lbl { font-size: 0.42rem; color: #444; font-family: 'Press Start 2P', monospace; }
+
+    /* ── Zoom ── */
+    #zoom-row { display: flex; align-items: center; gap: 4px; }
+    .zbtn {
+      width: 22px; height: 22px; border: 2px solid #2a2030; background: #120f1e;
+      color: #7a6040; font-size: 0.9rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 2px 2px 0 #080510; font-family: monospace;
+      transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
+    }
+    .zbtn:hover { background: #1a1428; color: #f0c040; }
+    .zbtn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #080510; }
+    #zlbl { flex:1; text-align:center; font-size: 0.5rem; color: #f0c040;
+      text-shadow: 0 0 8px rgba(240,192,64,0.7); }
+    #zfit {
+      padding: 0 5px; height: 22px; border: 2px solid #2a2030; background: #120f1e;
+      color: #7a6040; font-size: 0.35rem; cursor: pointer;
+      font-family: 'Press Start 2P', monospace;
+      box-shadow: 2px 2px 0 #080510; transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
+    }
+    #zfit:hover { background: #1a1428; color: #f0c040; }
+    #zfit:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #080510; }
+
+    /* ── Name ── */
+    #name-row { display: flex; gap: 4px; }
+    #name-in {
+      flex:1; min-width:0; padding: 5px 6px;
+      border: 2px solid #2a2030; background: #0a0814; color: #c8a870;
+      font-size: 0.42rem; outline: none; font-family: 'Press Start 2P', monospace;
+    }
+    #name-in:focus { border-color: #f0c040; box-shadow: 0 0 8px rgba(240,192,64,0.3); }
+    #name-btn {
+      padding: 5px 7px; border: 2px solid #2a2030; background: #120f1e; color: #7a6040;
+      cursor: pointer; font-size: 0.75rem;
+      box-shadow: 2px 2px 0 #080510; transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
+    }
+    #name-btn:hover { background: #1a1428; color: #f0c040; }
+    #name-btn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #080510; }
+
+    /* ── Users ── */
+    #users-wrap { flex:1; overflow-y:auto; min-height:0; }
+    #users-wrap::-webkit-scrollbar { width: 3px; }
+    #users-wrap::-webkit-scrollbar-thumb { background: #222; }
+    #users { list-style:none; display:flex; flex-direction:column; gap:2px; }
+    #users li {
+      display:flex; align-items:center; gap:5px;
+      padding: 5px 5px; background: #0c0a16;
+      border: 1px solid #1e1828; border-left: 3px solid #2a2030;
+      font-size: 0.38rem;
+    }
+    .udot { width:7px; height:7px; flex-shrink:0; }
+    .uname { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a09070; }
+    .uyou { font-size: 0.35rem; color: #50c878; text-shadow: 0 0 6px rgba(80,200,120,0.8); }
+
+    /* ── HUDs ── */
+    #coord-hud, #zoom-hud, #hint-hud {
+      position: fixed; pointer-events: none;
+      font-size: 0.42rem; z-index: 50;
+      background: rgba(0,0,0,0.85); border: 1px solid #222;
+      padding: 4px 8px;
+    }
+    #coord-hud { bottom:12px; left:212px; color:#50c878; text-shadow:0 0 8px rgba(80,200,120,0.7); font-family:'Press Start 2P',monospace; border-color:#0a1e12; background:rgba(10,14,20,0.9); }
+    #zoom-hud  { top:12px; right:276px; color:#f0c040; text-shadow:0 0 10px rgba(240,192,64,0.8); border-color:#2a1e00; background:rgba(12,10,18,0.9); }
+    #hint-hud  { bottom:12px; right:276px; color:#3a2e1e; text-align:right; line-height:2.2; border-color:#1e1828; background:rgba(10,8,16,0.85); }
+    body.chat-closed #zoom-hud { right: 28px; }
+    body.chat-closed #hint-hud { right: 28px; }
+
+    /* ── Chat panel ── */
+    #chat {
+      position: fixed; top:0; right:0;
+      width: 260px; height:100vh;
+      background: #0d0b18;
+      border-left: 2px solid #7850c8;
+      box-shadow: -4px 0 28px rgba(120,80,200,0.2), inset 1px 0 0 rgba(180,120,255,0.06);
+      display: flex; flex-direction: column;
+      z-index: 100;
+      transition: transform 0.22s ease;
+    }
+    #chat.closed { transform: translateX(260px); }
+
+    /* ── Chat toggle ── */
+    #chat-toggle {
+      position: fixed; top:50%; right:260px;
+      transform: translateY(-50%);
+      z-index: 101;
+      width: 24px; height: 80px;
+      background: linear-gradient(180deg, #9060d0 0%, #6030a8 100%);
+      border: none; border-right: none;
+      cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+      box-shadow: -4px 0 0 #301860, -3px 0 20px rgba(120,80,200,0.6);
+      outline: none;
+      transition: right 0.22s cubic-bezier(.4,0,.2,1), box-shadow 0.2s;
+    }
+    #chat-toggle:hover { box-shadow: -4px 0 0 #301860, -3px 0 34px rgba(150,100,240,0.9); }
+    #chat-toggle:active { filter: brightness(1.25); }
+    #chat-toggle.closed {
+      right: 0;
+      animation: ct-pulse 2.4s ease-in-out infinite;
+    }
+    @keyframes ct-pulse {
+      0%,100% { box-shadow: -4px 0 0 #301860, -3px 0 16px rgba(120,80,200,0.5); }
+      50%      { box-shadow: -4px 0 0 #301860, -3px 0 44px rgba(160,100,255,1), 0 0 70px rgba(200,160,255,0.3); }
+    }
+    .ct-dot {
+      width: 6px; height: 6px; background: #f0d080; flex-shrink: 0;
+      box-shadow: 0 0 5px #f0d080, 0 0 12px rgba(240,208,128,0.8);
+    }
+    #chat-toggle.closed .ct-dot { animation: ct-blink 1.2s ease-in-out infinite; }
+    @keyframes ct-blink {
+      0%,100% { opacity:1; box-shadow:0 0 5px #f0d080, 0 0 12px rgba(240,208,128,0.8); }
+      50%      { opacity:0.15; box-shadow:none; }
+    }
+    .ct-lbl {
+      writing-mode: vertical-rl;
+      font-size: 0.38rem; letter-spacing: 3px; text-transform: uppercase;
+      color: rgba(240,208,128,0.9); user-select: none;
+      font-family: 'Press Start 2P', monospace;
+    }
+
+    #chat-header {
+      padding: 10px 10px 8px;
+      font-size: 0.5rem; letter-spacing: 3px; text-transform: uppercase;
+      color: #c080f8;
+      text-shadow: 0 0 8px rgba(192,128,248,0.7);
+      border-bottom: 2px solid #1e1828;
+      flex-shrink: 0;
+      background: linear-gradient(90deg, rgba(120,80,200,0.1) 0%, transparent 100%);
+    }
+
+    /* ── Chat messages ── */
+    #chat-messages {
+      flex:1; overflow-y:auto; padding:6px;
+      display:flex; flex-direction:column; gap:4px;
+      scrollbar-width: thin; scrollbar-color: #ff004d transparent;
+    }
+    #chat-messages::-webkit-scrollbar { width: 3px; }
+    #chat-messages::-webkit-scrollbar-thumb { background: #7850c8; }
+
+    .chat-msg { display:flex; flex-direction:column; gap:2px; padding: 5px 6px; border-left: 2px solid #1e1828; }
+    .chat-msg:hover { border-left-color: #5a3890; background: rgba(120,80,200,0.04); }
+    .chat-msg-meta { font-size:0.48rem; display:flex; align-items:baseline; gap:5px; }
+    .chat-msg-author { font-size: 0.55rem; }
+    .chat-msg-time { color: #2e2438; }
+    .chat-msg-body {
+      font-size: 0.65rem; color: #a09070; line-height: 1.9;
+      word-break: break-word; padding-left: 2px;
+      font-family: 'Press Start 2P', monospace;
+    }
+    .chat-msg.system .chat-msg-body {
+      color: #f0c040; font-size: 0.55rem;
+      text-shadow: 0 0 6px rgba(240,192,64,0.6);
+    }
+
+    /* ── Chat bottom ── */
+    #chat-bottom {
+      padding: 6px; border-top: 2px solid #1e1828;
+      display: flex; flex-direction: column; gap: 5px; flex-shrink: 0;
+    }
+    #chat-input-row { display:flex; gap:4px; align-items:center; }
+    #chat-input {
+      flex:1; min-width:0; padding: 6px 6px;
+      border: 2px solid #2a2040; background: #0a0814;
+      color: #c8a870; font-size: 0.42rem; outline: none;
+      font-family: 'Press Start 2P', monospace;
+      user-select: text;
+    }
+    #chat-input:focus { border-color: #c080f8; box-shadow: 0 0 8px rgba(192,128,248,0.25); }
+
+    #emoji-btn, #gif-btn {
+      height: 28px; border: 2px solid #222; background: #141414;
+      cursor: pointer; font-family: 'Press Start 2P', monospace;
+      box-shadow: 2px 2px 0 #000; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.06s, box-shadow 0.06s, color 0.1s, border-color 0.1s;
+    }
+    #emoji-btn { width: 28px; font-size: 0.85rem; color: #f0c040; border-color: #2a1e00; background: #120f1e; }
+    #emoji-btn:hover { background: #1a1200; border-color: #f0c040; box-shadow: 2px 2px 0 #604800, 0 0 12px rgba(240,192,64,0.5); }
+    #gif-btn { padding: 0 6px; font-size: 0.35rem; letter-spacing: 1px; color: #50c878; border-color: #082010; background: #120f1e; }
+    #gif-btn:hover, #gif-btn.active { background: #081408; border-color: #50c878; color: #50c878; box-shadow: 2px 2px 0 #184830, 0 0 12px rgba(80,200,120,0.4); }
+    #emoji-btn:active, #gif-btn:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #000; }
+
+    #chat-send {
+      width: 28px; height: 28px; border: 2px solid #604800;
+      background: linear-gradient(135deg, #f08030, #c86010);
+      color: #fff; cursor: pointer; font-size: 0.75rem;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+      box-shadow: 2px 2px 0 #3a2000;
+      transition: transform 0.06s, box-shadow 0.06s, filter 0.1s;
+      animation: send-glow 3s ease-in-out infinite;
+    }
+    @keyframes send-glow {
+      0%,100% { box-shadow: 2px 2px 0 #3a2000; }
+      50%      { box-shadow: 2px 2px 0 #3a2000, 0 0 16px rgba(240,128,48,0.8), 0 0 30px rgba(240,192,64,0.3); }
+    }
+    #chat-send:hover { filter: brightness(1.2); }
+    #chat-send:active { transform:translate(2px,2px); box-shadow:0 0 0 #3a2000; animation:none; }
+
+    /* ── Emoji picker ── */
+    #emoji-picker {
+      display: none; background: #0d0b18;
+      border: 2px solid #2a2040;
+      padding: 6px; max-height: 200px; overflow-y: auto;
+      scrollbar-width: thin; scrollbar-color: #333 transparent;
+      box-shadow: 4px 4px 0 #000;
+    }
+    #emoji-picker.open { display: block; }
+    .emoji-tabs { display:flex; gap:3px; margin-bottom:5px; }
+    .emoji-tab {
+      flex:1; padding: 4px 2px; border: 2px solid #2a2040;
+      background: #0a0814; color: #4a3860; font-size: 0.35rem;
+      font-family: 'Press Start 2P', monospace; cursor: pointer;
+      box-shadow: 2px 2px 0 #080510; transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
+    }
+    .emoji-tab:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #080510; }
+    .emoji-tab.active { border-color: #c080f8; color: #f0d080; background: #160a28; box-shadow: 2px 2px 0 #4a2080; }
+    #emoji-picker-grid, #custom-emoji-grid { display:flex; flex-wrap:wrap; gap:2px; }
+    #emoji-tab-custom { display:none; }
+    .ep-btn {
+      width: 26px; height: 26px; background: none; border: none;
+      cursor: pointer; font-size: 0.95rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.05s;
+    }
+    .ep-btn:hover { background: #1a1a1a; outline: 2px solid #333; }
+    .cep-btn {
+      width: 34px; height: 34px; background: none; border: none;
+      cursor: pointer; padding: 3px;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 1px; transition: background 0.05s;
+    }
+    .cep-btn:hover { background: #1a1a1a; outline: 2px solid #333; }
+    .cep-btn img { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; }
+    .cep-btn span { font-size: 0.3rem; color: #444; font-family: 'Press Start 2P', monospace; }
+
+    /* ── GIF picker ── */
+    #gif-picker {
+      display: none; flex-direction: column; gap: 5px;
+      background: #0d0b18; border: 2px solid #2a2040;
+      padding: 6px; box-shadow: 4px 4px 0 #000;
+    }
+    #gif-picker.open { display: flex; }
+    #gif-search-in {
+      padding: 5px 6px; border: 2px solid #2a2040;
+      background: #0a0814; color: #c8a870; font-size: 0.42rem; outline: none;
+      font-family: 'Press Start 2P', monospace;
+    }
+    #gif-search-in:focus { border-color: #c080f8; }
+    #gif-grid { display:grid; grid-template-columns:1fr 1fr; gap:2px; max-height:180px; overflow-y:auto; }
+    .gif-thumb {
+      width:100%; height:65px; object-fit:cover; cursor:pointer;
+      transition: opacity 0.1s, outline 0.05s; background: #111;
+    }
+    .gif-thumb:hover { opacity: 0.8; outline: 2px solid #f0c040; }
+    #gif-status { font-size: 0.38rem; color: #333; text-align:center; padding:16px 0; font-family:'Press Start 2P',monospace; }
+
+    /* ── Chat GIF / custom emoji ── */
+    .chat-gif { max-width:100%; max-height:160px; margin-top:4px; display:block; object-fit:contain; image-rendering:pixelated; }
+    .custom-emoji-img { height:1.6em; width:auto; vertical-align:middle; display:inline-block; object-fit:contain; image-rendering:pixelated; }
+    .chat-emoji { font-size: 1.6em; line-height: 1; vertical-align: middle; }
+
+    /* ── Reactions ── */
+    .msg-reactions { display:flex; flex-wrap:wrap; gap:3px; margin-top:3px; align-items:center; }
+    .react-chip {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 6px; border: 2px solid #2a2040; background: #120f1e;
+      color: #9080a0; cursor: pointer; font-size: 0.75rem;
+      box-shadow: 2px 2px 0 #080510; transition: transform 0.06s, box-shadow 0.06s, border-color 0.1s;
+    }
+    .react-chip:hover { background: #1a1428; border-color: #f0c040; box-shadow: 2px 2px 0 #604800; }
+    .react-chip:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #080510; }
+    .react-chip.mine { border-color: #c060e8; background: #180a28; color:#e0c0ff; box-shadow:2px 2px 0 #4a2060; }
+    .react-chip .rcount { font-size: 0.35rem; color: #5a4868; font-family:'Press Start 2P',monospace; }
+    .react-chip.mine .rcount { color: #c080f8; }
+    .react-add, .reply-btn {
+      height: 18px; border: 1px dashed #2a2a2a; background: none;
+      color: #444; font-size: 0.6rem; cursor: pointer;
+      display: none; align-items: center; justify-content: center;
+      transition: color 0.1s, border-color 0.1s; padding: 0 4px;
+    }
+    .chat-msg:hover .react-add,
+    .chat-msg:hover .reply-btn { display: inline-flex; }
+    .react-add:hover { border-color: #c060e8; color: #c060e8; }
+    .reply-btn:hover { border-color: #60b8f0; color: #60b8f0; }
+
+    /* ── Floating reaction picker ── */
+    #react-picker {
+      position: fixed; z-index: 500;
+      background: #0d0b18; border: 2px solid #3a2858;
+      padding: 6px; display: none; flex-direction: column; gap: 4px;
+      width: 224px; max-height: 220px;
+      box-shadow: 6px 6px 0 #000;
+    }
+    #react-picker.open { display: flex; }
+    #react-picker-grid { display:flex; flex-wrap:wrap; gap:2px; overflow-y:auto; scrollbar-width:thin; scrollbar-color:#333 transparent; }
+    .rp-btn {
+      width:28px; height:28px; border:none; background:none;
+      cursor:pointer; font-size:0.95rem;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .rp-btn:hover { background:#1a1a1a; outline:2px solid #333; }
+    .rp-cep-btn {
+      width:28px; height:28px; border:none; background:none;
+      cursor:pointer; padding:3px;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .rp-cep-btn img { width:20px; height:20px; object-fit:contain; image-rendering:pixelated; }
+    .rp-cep-btn:hover { background:#1a1a1a; outline:2px solid #333; }
+
+    /* ── Emoji upload modal ── */
+    #emoji-upload-modal {
+      display: none; position: fixed; inset:0; z-index:600;
+      background: rgba(0,0,0,0.88); align-items:center; justify-content:center;
+    }
+    #emoji-upload-modal.open { display: flex; }
+    #eum-box {
+      background: #0d0b18; border: 2px solid #c8853a;
+      padding: 20px; width: 280px; display:flex; flex-direction:column; gap:12px;
+      box-shadow: 8px 8px 0 #7a0020;
+    }
+    #eum-title { font-size:0.55rem; color:#f0c040; text-transform:uppercase; letter-spacing:2px; text-shadow:0 0 8px rgba(240,192,64,0.7); }
+    #eum-preview-wrap {
+      width:80px; height:80px; border: 2px dashed #3a2858;
+      align-self:center; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition:border-color 0.1s; overflow:hidden;
+    }
+    #eum-preview-wrap:hover { border-color: #f0c040; }
+    #eum-preview { width:100%; height:100%; object-fit:contain; display:none; image-rendering:pixelated; }
+    #eum-preview-placeholder { font-size:2rem; pointer-events:none; }
+    #eum-name {
+      padding:7px 8px; border:2px solid #2a2040; background:#0a0814;
+      color:#c8a870; font-size:0.45rem; outline:none;
+      font-family:'Press Start 2P',monospace;
+    }
+    #eum-name:focus { border-color:#f0c040; }
+    #eum-file-hint { font-size:0.38rem; color:#4a3860; text-align:center; font-family:'Press Start 2P',monospace; }
+    #eum-btns { display:flex; gap:8px; }
+    #eum-save {
+      flex:1; padding:8px; border:2px solid #604800;
+      background:linear-gradient(135deg,#f08030,#c86010); color:#fff; font-size:0.45rem; cursor:pointer;
+      font-family:'Press Start 2P',monospace; box-shadow:3px 3px 0 #3a2000;
+      transition:transform 0.06s, box-shadow 0.06s;
+    }
+    #eum-save:hover { filter:brightness(1.15); }
+    #eum-save:active { transform:translate(2px,2px); box-shadow:1px 1px 0 #3a2000; }
+    #eum-cancel {
+      padding:8px 10px; border:2px solid #2a2040; background:none;
+      color:#5a4868; font-size:0.42rem; cursor:pointer;
+      font-family:'Press Start 2P',monospace; box-shadow:2px 2px 0 #080510;
+      transition:transform 0.06s, box-shadow 0.06s, color 0.1s;
+    }
+    #eum-cancel:hover { color:#c8a870; border-color:#7a6040; }
+    #eum-cancel:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #080510; }
+
+    /* ── Reply quote ── */
+    .chat-reply-quote {
+      background: #0a0814; border-left: 3px solid #3a2858;
+      padding: 3px 7px; margin-bottom: 3px;
+      font-size: 0.38rem; cursor: pointer; overflow: hidden;
+    }
+    .chat-reply-quote:hover { border-left-color: #c060e8; }
+    .rq-author { font-weight:700; margin-bottom:2px; }
+    .rq-text { color:#3a2e4a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-family:'Press Start 2P',monospace; }
+
+    /* ── Reply banner ── */
+    #reply-banner {
+      display:none; align-items:center; gap:6px;
+      padding: 5px 6px; background: #0a0814;
+      border-left: 3px solid #c060e8;
+    }
+    #reply-banner.active { display: flex; }
+    #reply-banner-text { flex:1; font-size:0.38rem; color:#666; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:'Press Start 2P',monospace; }
+    #reply-cancel { background:none; border:none; color:#444; cursor:pointer; font-size:0.9rem; line-height:1; padding:0 2px; }
+    #reply-cancel:hover { color:#fff; }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<aside id="sidebar">
+  <h1>DrawWall</h1>
+
+  <div>
+    <div class="lbl">Tool</div>
+    <div id="tools">
+      <button class="tool-btn active" data-tool="pen">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>Pen
+      </button>
+      <button class="tool-btn" data-tool="eraser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 20H7L3 16l10-10 7 7-1.5 1.5"/><path d="M6.5 17.5l5-5"/>
+        </svg>Eraser
+      </button>
+    </div>
+  </div>
+
+  <div>
+    <div class="lbl">Color</div>
+    <div id="palette"></div>
+    <div id="cc-row">
+      <input type="color" id="cc" value="#000000" />
+      <span id="cc-lbl">#000000</span>
+    </div>
+  </div>
+
+  <div>
+    <div class="lbl">Zoom</div>
+    <div id="zoom-row">
+      <button class="zbtn" id="zminus">−</button>
+      <span id="zlbl">1×</span>
+      <button class="zbtn" id="zplus">+</button>
+      <button id="zfit">Fit</button>
+    </div>
+  </div>
+
+  <div>
+    <div class="lbl">Name</div>
+    <div id="name-row">
+      <input id="name-in" type="text" maxlength="24" placeholder="Your name…" />
+      <button id="name-btn">✓</button>
+    </div>
+  </div>
+
+  <div id="users-wrap">
+    <div class="lbl">Online — <span id="ucount">0</span></div>
+    <ul id="users"></ul>
+  </div>
+</aside>
+
+<aside id="chat">
+  <div id="chat-header">💬 Chat</div>
+  <div id="chat-messages"></div>
+  <div id="chat-bottom">
+    <div id="emoji-picker">
+      <div class="emoji-tabs">
+        <button class="emoji-tab active" id="etab-std">Standard</button>
+        <button class="emoji-tab" id="etab-custom">Custom</button>
+        <button class="emoji-tab" id="etab-upload">＋ Add</button>
+      </div>
+      <div id="emoji-tab-std">
+        <div id="emoji-picker-grid"></div>
+      </div>
+      <div id="emoji-tab-custom" style="display:none">
+        <div id="custom-emoji-grid"></div>
+      </div>
+    </div>
+    <div id="gif-picker">
+      <input id="gif-search-in" type="text" placeholder="Search GIFs…" autocomplete="off" />
+      <div id="gif-grid"><div id="gif-status">Type to search GIFs</div></div>
+    </div>
+    <div id="reply-banner">
+      <span id="reply-banner-text"></span>
+      <button id="reply-cancel" title="Cancel reply">✕</button>
+    </div>
+    <div id="chat-input-row">
+      <input id="chat-input" type="text" maxlength="200" placeholder="Say something…" autocomplete="off" />
+      <button id="gif-btn" title="GIF">GIF</button>
+      <button id="emoji-btn" title="Emoji">😊</button>
+      <button id="chat-send" title="Send">↑</button>
+    </div>
+  </div>
+</aside>
+
+<div id="react-picker"><div id="react-picker-grid"></div></div>
+<button id="chat-toggle" title="Toggle chat">
+  <span class="ct-dot"></span>
+  <span class="ct-lbl">Chat</span>
+</button>
+
+<!-- Emoji upload modal -->
+<div id="emoji-upload-modal">
+  <div id="eum-box">
+    <div id="eum-title">Upload Custom Emoji</div>
+    <div id="eum-preview-wrap">
+      <img id="eum-preview" alt="preview" />
+      <span id="eum-preview-placeholder">🖼️</span>
+    </div>
+    <input id="eum-name" type="text" maxlength="24" placeholder="emoji_name (e.g. catjam)" autocomplete="off" />
+    <div id="eum-file-hint">Click the image above to choose a file</div>
+    <input id="eum-file" type="file" accept="image/*" style="display:none" />
+    <div id="eum-btns">
+      <button id="eum-cancel">Cancel</button>
+      <button id="eum-save">Upload</button>
+    </div>
+  </div>
+</div>
+
+<div id="coord-hud">—, —</div>
+<div id="zoom-hud">1×</div>
+<div id="hint-hud">Scroll: zoom · Space/Right-click: pan</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const PALETTE = [
+  '#000000','#2d2d2d','#5a5a5a','#888888','#c0c0c0','#ffffff',
+  '#c0392b','#e74c3c','#e67e22','#f39c12','#f1c40f','#d4ac0d',
+  '#1e8449','#27ae60','#2ecc71','#a9dfbf','#85c1e9','#3498db',
+  '#1a5276','#2980b9','#9b59b6','#6c3483','#e91e63','#ff69b4',
+  '#795548','#a1522c','#ff5722','#ff8a65','#004d40','#00897b',
+];
+
+// ── Server config ─────────────────────────────────────────────────────────────
+// Set SERVER_URL to connect to a remote server, e.g. 'http://192.168.1.50:3000'
+// Leave empty to connect to the same host that served this page.
+const SERVER_URL = '';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+const socket = SERVER_URL ? io(SERVER_URL) : io();
+let myId = null;
+let CANVAS_W = 1, CANVAS_H = 1; // set by server on init
+
+let cellSize = 1;
+const MIN_CELL = 1, MAX_CELL = 64;
+let offsetX = 0, offsetY = 0;
+
+let tool = 'pen', penColor = '#000000';
+let isDrawing = false, isPanning = false, spaceDown = false;
+let panSX = 0, panSY = 0, panOX = 0, panOY = 0;
+let lastPx = -1, lastPy = -1;
+let hoverPx = -1, hoverPy = -1;
+
+const pixelData = new Map();
+const cursors = {};
+const users = {};
+let pendingBatch = [], flushTimer = null;
+
+let offscreen = null, offCtx = null;
+
+// ── Canvas setup ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function sizeCanvas() {
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function initOffscreen(w, h) {
+  offscreen = document.createElement('canvas');
+  offscreen.width  = w;
+  offscreen.height = h;
+  offCtx = offscreen.getContext('2d');
+  offCtx.fillStyle = '#ffffff';
+  offCtx.fillRect(0, 0, w, h);
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+let raf = null;
+function redraw() {
+  if (!raf) raf = requestAnimationFrame(() => { raf = null; draw(); });
+}
+
+function draw() {
+  const W = canvas.width, H = canvas.height;
+
+  // Dark background
+  ctx.fillStyle = '#181818';
+  ctx.fillRect(0, 0, W, H);
+
+  if (!offscreen) return;
+
+  // Pixel canvas
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(offscreen, offsetX, offsetY, CANVAS_W * cellSize, CANVAS_H * cellSize);
+  ctx.restore();
+
+  // Border
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(offsetX - 0.5, offsetY - 0.5, CANVAS_W * cellSize + 1, CANVAS_H * cellSize + 1);
+
+  // Grid (only at higher zoom)
+  if (cellSize >= 4) {
+    const a = Math.min(0.2, 0.04 + (cellSize - 4) * 0.008);
+    ctx.strokeStyle = `rgba(0,0,0,${a.toFixed(3)})`;
+    ctx.lineWidth = 1;
+    const x0 = Math.max(0, Math.floor(-offsetX / cellSize));
+    const y0 = Math.max(0, Math.floor(-offsetY / cellSize));
+    const x1 = Math.min(CANVAS_W, Math.ceil((W - offsetX) / cellSize));
+    const y1 = Math.min(CANVAS_H, Math.ceil((H - offsetY) / cellSize));
+    ctx.beginPath();
+    for (let i = x0; i <= x1; i++) {
+      const sx = (offsetX + i * cellSize) + 0.5;
+      ctx.moveTo(sx, offsetY + y0 * cellSize);
+      ctx.lineTo(sx, offsetY + y1 * cellSize);
+    }
+    for (let i = y0; i <= y1; i++) {
+      const sy = (offsetY + i * cellSize) + 0.5;
+      ctx.moveTo(offsetX + x0 * cellSize, sy);
+      ctx.lineTo(offsetX + x1 * cellSize, sy);
+    }
+    ctx.stroke();
+  }
+
+  // Remote cursors
+  ctx.font = 'bold 11px sans-serif';
+  for (const c of Object.values(cursors)) {
+    if (c.px < 0 || c.px >= CANVAS_W || c.py < 0 || c.py >= CANVAS_H) continue;
+    const sx = offsetX + c.px * cellSize;
+    const sy = offsetY + c.py * cellSize;
+    ctx.strokeStyle = c.color;
+    ctx.lineWidth = Math.max(1.5, cellSize * 0.1);
+    ctx.strokeRect(sx + 1, sy + 1, cellSize - 2, cellSize - 2);
+    if (cellSize >= 6) {
+      const tw = ctx.measureText(c.name).width + 8;
+      const lx = Math.max(0, Math.min(W - tw, sx));
+      const ly = sy > 20 ? sy - 18 : sy + cellSize + 3;
+      ctx.fillStyle = c.color;
+      ctx.fillRect(lx, ly, tw, 15);
+      ctx.fillStyle = '#fff';
+      ctx.fillText(c.name, lx + 4, ly + 11);
+    }
+  }
+
+  // Hover cell
+  if (hoverPx >= 0 && hoverPx < CANVAS_W && hoverPy >= 0 && hoverPy < CANVAS_H) {
+    const sx = offsetX + hoverPx * cellSize;
+    const sy = offsetY + hoverPy * cellSize;
+    if (tool === 'eraser') {
+      ctx.strokeStyle = 'rgba(255,60,60,0.9)';
+    } else {
+      ctx.fillStyle = penColor;
+      ctx.globalAlpha = 0.4;
+      ctx.fillRect(sx, sy, cellSize, cellSize);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    }
+    ctx.lineWidth = 1;
+    ctx.strokeRect(sx + 0.5, sy + 0.5, cellSize - 1, cellSize - 1);
+  }
+}
+
+// ── Zoom / pan ────────────────────────────────────────────────────────────────
+function setZoomLabel(z) {
+  document.getElementById('zlbl').textContent = z + '×';
+  document.getElementById('zoom-hud').textContent = z + '×';
+  // color the zoom hud: gold → ember → arcane at high zoom
+  document.getElementById('zoom-hud').style.color = z >= 16 ? '#c060e8' : z >= 8 ? '#f08030' : '#f0c040';
+}
+
+function fitToView() {
+  const vw = canvas.width, vh = canvas.height;
+  cellSize = Math.max(MIN_CELL, Math.min(MAX_CELL,
+    Math.min(Math.floor(vw / CANVAS_W), Math.floor(vh / CANVAS_H))));
+  offsetX = Math.round((vw - cellSize * CANVAS_W) / 2);
+  offsetY = Math.round((vh - cellSize * CANVAS_H) / 2);
+  setZoomLabel(cellSize);
+  redraw();
+}
+
+function zoomAt(delta, cx, cy) {
+  const prev = cellSize;
+  const step = cellSize >= 32 ? 8 : cellSize >= 16 ? 4 : cellSize >= 8 ? 2 : 1;
+  cellSize = Math.max(MIN_CELL, Math.min(MAX_CELL, cellSize + delta * step));
+  if (cellSize === prev) return;
+  offsetX = Math.round(cx - (cx - offsetX) * (cellSize / prev));
+  offsetY = Math.round(cy - (cy - offsetY) * (cellSize / prev));
+  setZoomLabel(cellSize);
+  redraw();
+}
+
+// ── Pixel ops ─────────────────────────────────────────────────────────────────
+function putPixel(px, py, erase) {
+  if (!offscreen || px < 0 || px >= CANVAS_W || py < 0 || py >= CANVAS_H) return;
+  const key = `${px},${py}`;
+  if (erase) {
+    pixelData.delete(key);
+    offCtx.fillStyle = '#ffffff';
+  } else {
+    pixelData.set(key, penColor);
+    offCtx.fillStyle = penColor;
+  }
+  offCtx.fillRect(px, py, 1, 1);
+  pendingBatch.push(erase ? { x: px, y: py, erase: true } : { x: px, y: py, color: penColor });
+  if (!flushTimer) flushTimer = setTimeout(() => {
+    flushTimer = null;
+    if (pendingBatch.length) { socket.emit('pixels', pendingBatch); pendingBatch = []; }
+  }, 25);
+}
+
+function line(x0, y0, x1, y1, erase) {
+  let dx = Math.abs(x1-x0), dy = Math.abs(y1-y0);
+  let sx = x0<x1?1:-1, sy = y0<y1?1:-1, err = dx-dy;
+  for(;;) {
+    putPixel(x0, y0, erase);
+    if (x0===x1 && y0===y1) break;
+    const e2 = 2*err;
+    if (e2 > -dy) { err -= dy; x0 += sx; }
+    if (e2 <  dx) { err += dx; y0 += sy; }
+  }
+}
+
+// ── Events ────────────────────────────────────────────────────────────────────
+function pos(e) {
+  const src = e.touches ? e.touches[0] : e;
+  return { x: src.clientX, y: src.clientY };
+}
+
+function toPixel(x, y) {
+  return { px: Math.floor((x - offsetX) / cellSize), py: Math.floor((y - offsetY) / cellSize) };
+}
+
+canvas.addEventListener('mousedown', e => {
+  e.preventDefault();
+  if (e.button === 1 || e.button === 2 || (e.button === 0 && spaceDown)) {
+    isPanning = true;
+    panSX = e.clientX; panSY = e.clientY;
+    panOX = offsetX;   panOY = offsetY;
+    canvas.style.cursor = 'grabbing';
+    return;
+  }
+  if (e.button === 0) {
+    isDrawing = true;
+    const { px, py } = toPixel(e.clientX, e.clientY);
+    lastPx = px; lastPy = py;
+    line(px, py, px, py, tool === 'eraser');
+    redraw();
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (isPanning) {
+    offsetX = panOX + (e.clientX - panSX);
+    offsetY = panOY + (e.clientY - panSY);
+    redraw();
+    return;
+  }
+  const { px, py } = toPixel(e.clientX, e.clientY);
+  if (px !== hoverPx || py !== hoverPy) {
+    hoverPx = px; hoverPy = py;
+    const ok = px >= 0 && px < CANVAS_W && py >= 0 && py < CANVAS_H;
+    document.getElementById('coord-hud').textContent = ok ? `${px}, ${py}` : '—, —';
+    redraw();
+  }
+  const now = Date.now();
+  if (now - (canvas._lastCursor|0) > 40) {
+    canvas._lastCursor = now;
+    if (px >= 0 && px < CANVAS_W && py >= 0 && py < CANVAS_H) socket.emit('cursor', { px, py });
+  }
+  if (isDrawing && (px !== lastPx || py !== lastPy)) {
+    line(lastPx, lastPy, px, py, tool === 'eraser');
+    lastPx = px; lastPy = py;
+    redraw();
+  }
+});
+
+window.addEventListener('mouseup', () => {
+  if (isPanning) { isPanning = false; canvas.style.cursor = spaceDown ? 'grab' : 'crosshair'; }
+  if (isDrawing) {
+    isDrawing = false;
+    if (pendingBatch.length) { clearTimeout(flushTimer); flushTimer = null; socket.emit('pixels', pendingBatch); pendingBatch = []; }
+  }
+});
+
+canvas.addEventListener('mouseleave', () => { hoverPx = -1; hoverPy = -1; redraw(); });
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomAt(e.deltaY < 0 ? 1 : -1, e.clientX, e.clientY);
+}, { passive: false });
+
+window.addEventListener('keydown', e => {
+  if (e.target.matches('input')) return;
+  if (e.code === 'Space') { e.preventDefault(); spaceDown = true; canvas.style.cursor = 'grab'; }
+  if (e.code === 'KeyE') setTool('eraser');
+  if (e.code === 'KeyP' || e.code === 'KeyB') setTool('pen');
+  if (e.code === 'BracketRight') zoomAt(1,  canvas.width/2, canvas.height/2);
+  if (e.code === 'BracketLeft')  zoomAt(-1, canvas.width/2, canvas.height/2);
+  if (e.code === 'KeyF') fitToView();
+});
+window.addEventListener('keyup', e => {
+  if (e.code === 'Space') { spaceDown = false; if (!isPanning) canvas.style.cursor = 'crosshair'; }
+});
+window.addEventListener('resize', () => { sizeCanvas(); redraw(); });
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+function setTool(t) {
+  tool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
+}
+document.querySelectorAll('.tool-btn').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+
+function setColor(c) {
+  penColor = c;
+  document.getElementById('cc').value = c;
+  document.getElementById('cc-lbl').textContent = c;
+  document.querySelectorAll('.sw').forEach(s => s.classList.toggle('on', s.dataset.c === c));
+}
+const pal = document.getElementById('palette');
+PALETTE.forEach(c => {
+  const d = document.createElement('div');
+  d.className = 'sw'; d.dataset.c = c; d.style.background = c;
+  if (c === '#ffffff') d.style.boxShadow = 'inset 0 0 0 1px #333';
+  d.addEventListener('click', () => setColor(c));
+  pal.appendChild(d);
+});
+setColor('#000000');
+document.getElementById('cc').addEventListener('input', e => {
+  penColor = e.target.value;
+  document.getElementById('cc-lbl').textContent = e.target.value;
+  document.querySelectorAll('.sw').forEach(s => s.classList.remove('on'));
+});
+
+document.getElementById('zminus').addEventListener('click', () => zoomAt(-1, canvas.width/2, canvas.height/2));
+document.getElementById('zplus').addEventListener('click',  () => zoomAt(1,  canvas.width/2, canvas.height/2));
+document.getElementById('zfit').addEventListener('click', fitToView);
+
+function submitName() {
+  const v = document.getElementById('name-in').value.trim();
+  if (v) socket.emit('set-name', v);
+}
+document.getElementById('name-btn').addEventListener('click', submitName);
+document.getElementById('name-in').addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function renderUsers() {
+  const ul = document.getElementById('users');
+  ul.innerHTML = '';
+  document.getElementById('ucount').textContent = Object.keys(users).length;
+  Object.values(users).forEach(u => {
+    const li = document.createElement('li');
+    li.innerHTML = `<div class="udot" style="background:${u.color};box-shadow:0 0 6px ${u.color}"></div>
+      <span class="uname">${esc(u.name)}</span>
+      ${u.id === myId ? '<span class="uyou">you</span>' : ''}`;
+    ul.appendChild(li);
+  });
+}
+
+// ── Socket ────────────────────────────────────────────────────────────────────
+socket.on('init', ({ userId, name, color, users: au, pixels: ap, size, customEmojis: ce }) => {
+  myId = userId;
+  CANVAS_W = size.w;
+  CANVAS_H = size.h;
+  document.getElementById('name-in').value = name;
+  Object.assign(users, au);
+  renderUsers();
+
+  initOffscreen(CANVAS_W, CANVAS_H);
+  for (const [key, col] of Object.entries(ap)) {
+    pixelData.set(key, col);
+    const [x, y] = key.split(',').map(Number);
+    offCtx.fillStyle = col;
+    offCtx.fillRect(x, y, 1, 1);
+  }
+  fitToView();
+
+  if (ce) for (const [n, url] of Object.entries(ce)) addCustomEmojiToGrid(n, url);
+});
+
+socket.on('pixels', ({ batch }) => {
+  if (!offscreen) return;
+  for (const p of batch) {
+    const key = `${p.x},${p.y}`;
+    if (p.erase) { pixelData.delete(key); offCtx.fillStyle='#ffffff'; }
+    else          { pixelData.set(key, p.color); offCtx.fillStyle = p.color; }
+    offCtx.fillRect(p.x, p.y, 1, 1);
+  }
+  redraw();
+});
+
+socket.on('cursor', ({ userId, px, py, color, name }) => {
+  cursors[userId] = { px, py, color, name };
+  redraw();
+});
+
+socket.on('user-joined',  u => { users[u.id] = u; renderUsers(); });
+socket.on('user-updated', u => { users[u.id] = u; if (cursors[u.id]) cursors[u.id].name = u.name; renderUsers(); });
+socket.on('user-left',    id => { delete users[id]; delete cursors[id]; renderUsers(); redraw(); });
+
+socket.on('clear', () => {
+  if (!offscreen) return;
+  pixelData.clear();
+  offCtx.fillStyle = '#ffffff';
+  offCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  redraw();
+});
+
+socket.on('announce', msg => {
+  const el = document.createElement('div');
+  el.textContent = msg;
+  Object.assign(el.style, {
+    position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)',
+    background: '#e94560', color: '#fff', padding: '10px 24px', borderRadius: '8px',
+    fontWeight: '700', fontSize: '0.95rem', zIndex: '999', pointerEvents: 'none',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+  });
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+});
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
+const EMOJIS = [
+  '😀','😂','🥹','😍','😎','🤔','😅','🥰','😊','😜','🤣','😭','😤','😩','🥺',
+  '😱','🤯','😳','🤩','🥳','😴','🤢','🤧','🤒','👻','💀','🤖','😸','🙄','😇',
+  '👍','👎','👋','✌️','🤞','🙌','👏','🙏','💪','🫶','❤️','🧡','💛','💚','💙',
+  '💜','🖤','💔','💕','💯','🔥','✨','⭐','🌟','💫','🎉','🎊','🎨','🖌️','🎮',
+  '🏆','🥇','⚽','🏀','🎯','🎲','🍕','🍔','🍟','☕','🍺','🥂','🌸','🌈','🌊',
+  '⚡','❄️','💥','🌙','☀️','🐱','🐶','🦊','🐼','🐨','🦁','🐸','🦋','🌺','🍀',
+];
+
+const customEmojiClient = new Map();
+const msgElements = new Map(); // msgId -> .msg-reactions DOM node
+
+function renderText(text) {
+  let html = esc(text);
+  html = html.replace(/:([a-z0-9_]{2,24}):/g, (match, name) => {
+    const url = customEmojiClient.get(name);
+    return url ? `<img class="custom-emoji-img" src="${url}" alt=":${name}:" title=":${name}:">` : match;
+  });
+  html = html.replace(/(\p{Emoji_Presentation}|\p{Extended_Pictographic})/gu,
+    '<span class="chat-emoji">$1</span>');
+  return html;
+}
+
+const chatMessages  = document.getElementById('chat-messages');
+const chatInput     = document.getElementById('chat-input');
+const emojiGrid     = document.getElementById('emoji-picker-grid');
+const emojiPicker   = document.getElementById('emoji-picker');
+const customEmojiGrid = document.getElementById('custom-emoji-grid');
+const gifPicker     = document.getElementById('gif-picker');
+const gifGrid       = document.getElementById('gif-grid');
+const reactPicker   = document.getElementById('react-picker');
+
+// Build standard emoji grid
+EMOJIS.forEach(em => {
+  const btn = document.createElement('button');
+  btn.className = 'ep-btn';
+  btn.textContent = em;
+  btn.addEventListener('click', () => { insertEmoji(em); emojiPicker.classList.remove('open'); });
+  emojiGrid.appendChild(btn);
+});
+
+// Build floating reaction picker (all standard emojis)
+const reactPickerGrid = document.getElementById('react-picker-grid');
+function addToReactPicker(em, isCustom, dataUrl) {
+  const btn = document.createElement('button');
+  if (isCustom) {
+    btn.className = 'rp-cep-btn';
+    btn.title = `:${em}:`;
+    btn.innerHTML = `<img src="${dataUrl}" alt=":${em}:">`;
+  } else {
+    btn.className = 'rp-btn';
+    btn.textContent = em;
+  }
+  btn.addEventListener('click', () => {
+    const msgId = parseInt(reactPicker.dataset.msgId);
+    if (msgId) socket.emit('react', { msgId, emoji: isCustom ? `:${em}:` : em });
+    reactPicker.classList.remove('open');
+  });
+  reactPickerGrid.appendChild(btn);
+}
+EMOJIS.forEach(em => addToReactPicker(em, false));
+
+function insertEmoji(em) {
+  const p = chatInput.selectionStart ?? chatInput.value.length;
+  chatInput.value = chatInput.value.slice(0, p) + em + chatInput.value.slice(p);
+  chatInput.focus();
+  chatInput.selectionStart = chatInput.selectionEnd = p + em.length;
+}
+
+// Emoji tabs
+document.getElementById('etab-std').addEventListener('click', () => {
+  document.getElementById('emoji-tab-std').style.display = '';
+  document.getElementById('emoji-tab-custom').style.display = 'none';
+  document.getElementById('etab-std').classList.add('active');
+  document.getElementById('etab-custom').classList.remove('active');
+});
+document.getElementById('etab-custom').addEventListener('click', () => {
+  document.getElementById('emoji-tab-std').style.display = 'none';
+  document.getElementById('emoji-tab-custom').style.display = 'block';
+  document.getElementById('etab-std').classList.remove('active');
+  document.getElementById('etab-custom').classList.add('active');
+});
+
+document.getElementById('emoji-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  emojiPicker.classList.toggle('open');
+  gifPicker.classList.remove('open');
+  document.getElementById('gif-btn').classList.remove('active');
+});
+
+document.getElementById('gif-btn').addEventListener('click', e => {
+  e.stopPropagation();
+  gifPicker.classList.toggle('open');
+  emojiPicker.classList.remove('open');
+  document.getElementById('gif-btn').classList.toggle('active', gifPicker.classList.contains('open'));
+});
+
+document.addEventListener('click', e => {
+  if (!emojiPicker.contains(e.target) && e.target.id !== 'emoji-btn')
+    emojiPicker.classList.remove('open');
+  if (!gifPicker.contains(e.target) && e.target.id !== 'gif-btn') {
+    gifPicker.classList.remove('open');
+    document.getElementById('gif-btn').classList.remove('active');
+  }
+  if (!reactPicker.contains(e.target) && !e.target.classList.contains('react-add'))
+    reactPicker.classList.remove('open');
+});
+
+// ── Custom emoji upload modal ──────────────────────────────────────────────────
+const eumModal    = document.getElementById('emoji-upload-modal');
+const eumFile     = document.getElementById('eum-file');
+const eumPreview  = document.getElementById('eum-preview');
+const eumPlaceholder = document.getElementById('eum-preview-placeholder');
+
+function openEmojiModal() {
+  eumModal.classList.add('open');
+  document.getElementById('eum-name').value = '';
+  eumPreview.style.display = 'none';
+  eumPlaceholder.style.display = '';
+  eumFile.value = '';
+  document.getElementById('eum-file-hint').textContent = 'Click the image above to choose a file';
+}
+function closeEmojiModal() { eumModal.classList.remove('open'); }
+
+document.getElementById('etab-upload').addEventListener('click', () => {
+  emojiPicker.classList.remove('open');
+  openEmojiModal();
+});
+document.getElementById('eum-cancel').addEventListener('click', closeEmojiModal);
+eumModal.addEventListener('click', e => { if (e.target === eumModal) closeEmojiModal(); });
+
+document.getElementById('eum-preview-wrap').addEventListener('click', () => eumFile.click());
+eumFile.addEventListener('change', () => {
+  const file = eumFile.files[0];
+  if (!file) return;
+  document.getElementById('eum-file-hint').textContent = '✓ ' + file.name;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    eumPreview.src = ev.target.result;
+    eumPreview.style.display = 'block';
+    eumPlaceholder.style.display = 'none';
+    // Auto-fill name from filename if empty
+    const nameIn = document.getElementById('eum-name');
+    if (!nameIn.value) {
+      nameIn.value = file.name.replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9_]/g, '_').slice(0, 24);
+    }
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('eum-save').addEventListener('click', () => {
+  const name = document.getElementById('eum-name').value.trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
+  const file = eumFile.files[0];
+  if (name.length < 2) { document.getElementById('eum-name').focus(); return; }
+  if (!file) { eumFile.click(); return; }
+  const reader = new FileReader();
+  reader.onload = ev => {
+    socket.emit('custom-emoji', { name, dataUrl: ev.target.result });
+    closeEmojiModal();
+  };
+  reader.readAsDataURL(file);
+});
+
+function addCustomEmojiToGrid(name, dataUrl) {
+  customEmojiClient.set(name, dataUrl);
+  // Emoji picker custom tab
+  const existing = customEmojiGrid.querySelector(`[data-name="${name}"]`);
+  if (existing) existing.remove();
+  const btn = document.createElement('button');
+  btn.className = 'cep-btn';
+  btn.dataset.name = name;
+  btn.innerHTML = `<img src="${dataUrl}" alt=":${name}:"><span>:${name}:</span>`;
+  btn.addEventListener('click', () => { insertEmoji(`:${name}:`); emojiPicker.classList.remove('open'); });
+  customEmojiGrid.appendChild(btn);
+  // Reaction picker
+  const existingRp = reactPickerGrid.querySelector(`[data-rp-name="${name}"]`);
+  if (existingRp) existingRp.remove();
+  const rpBtn = document.createElement('button');
+  rpBtn.className = 'rp-cep-btn';
+  rpBtn.dataset.rpName = name;
+  rpBtn.title = `:${name}:`;
+  rpBtn.innerHTML = `<img src="${dataUrl}" alt=":${name}:">`;
+  rpBtn.addEventListener('click', () => {
+    const msgId = parseInt(reactPicker.dataset.msgId);
+    if (msgId) socket.emit('react', { msgId, emoji: `:${name}:` });
+    reactPicker.classList.remove('open');
+  });
+  reactPickerGrid.appendChild(rpBtn);
+}
+
+socket.on('custom-emoji', ({ name, dataUrl }) => addCustomEmojiToGrid(name, dataUrl));
+
+// GIF search
+let gifSearchTimer = null;
+document.getElementById('gif-search-in').addEventListener('input', e => {
+  clearTimeout(gifSearchTimer);
+  const q = e.target.value.trim();
+  if (!q) { gifGrid.innerHTML = '<div id="gif-status">Type to search GIFs</div>'; return; }
+  gifSearchTimer = setTimeout(() => searchGifs(q), 400);
+});
+
+async function searchGifs(q) {
+  gifGrid.innerHTML = '<div id="gif-status">Searching…</div>';
+  try {
+    const res  = await fetch(`/api/gifs?q=${encodeURIComponent(q)}`);
+    const gifs = await res.json();
+    gifGrid.innerHTML = '';
+    if (!gifs.length) { gifGrid.innerHTML = '<div id="gif-status">No results</div>'; return; }
+    gifs.forEach(g => {
+      const img = document.createElement('img');
+      img.className = 'gif-thumb';
+      img.src = g.preview || g.url;
+      img.loading = 'lazy';
+      img.addEventListener('click', () => {
+        socket.emit('chat', { gif: g.url });
+        gifPicker.classList.remove('open');
+        document.getElementById('gif-btn').classList.remove('active');
+      });
+      gifGrid.appendChild(img);
+    });
+  } catch { gifGrid.innerHTML = '<div id="gif-status">Error loading GIFs</div>'; }
+}
+
+// ── Reply state ────────────────────────────────────────────────────────────────
+let replyToId = null;
+const replyBanner     = document.getElementById('reply-banner');
+const replyBannerText = document.getElementById('reply-banner-text');
+
+function setReply(id, authorName, snippet) {
+  replyToId = id;
+  replyBannerText.textContent = `↩ ${authorName}: ${snippet}`;
+  replyBanner.classList.add('active');
+  chatInput.focus();
+}
+function clearReply() {
+  replyToId = null;
+  replyBanner.classList.remove('active');
+}
+document.getElementById('reply-cancel').addEventListener('click', clearReply);
+
+// ── Message rendering ──────────────────────────────────────────────────────────
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function appendMessage({ id, userId, name, color, text, gif, replyTo, ts, system }) {
+  const div = document.createElement('div');
+  div.className = 'chat-msg' + (system ? ' system' : '');
+  if (system) {
+    div.innerHTML = `<div class="chat-msg-body">${esc(text || name || '')}</div>`;
+  } else {
+    let quoteHtml = '';
+    if (replyTo) {
+      const snippet = replyTo.text ? renderText(replyTo.text.slice(0, 80)) : '📎 attachment';
+      quoteHtml = `<div class="chat-reply-quote" data-ref="${parseInt(replyTo.id) || 0}">
+        <div class="rq-author" style="color:#888">${esc(replyTo.name)}</div>
+        <div class="rq-text">${snippet}</div>
+      </div>`;
+    }
+    let bodyHtml = '';
+    if (text) bodyHtml += `<div class="chat-msg-body">${renderText(text)}</div>`;
+    if (gif)  bodyHtml += `<img class="chat-gif" src="${esc(gif)}" alt="GIF" loading="lazy">`;
+    div.innerHTML = `
+      <div class="chat-msg-meta">
+        <span class="chat-msg-author" style="color:${color}">${esc(name)}</span>
+        <span class="chat-msg-time">${formatTime(ts)}</span>
+      </div>
+      ${quoteHtml}
+      ${bodyHtml}
+      <div class="msg-reactions">
+        <button class="reply-btn" title="Reply">↩</button>
+        <button class="react-add" title="React">+</button>
+      </div>`;
+    if (id) {
+      const reactRow = div.querySelector('.msg-reactions');
+      msgElements.set(id, reactRow);
+
+      div.querySelector('.reply-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        const snippet = text ? text.slice(0, 60) : gif ? 'GIF' : '…';
+        setReply(id, name, snippet);
+      });
+
+      div.querySelector('.react-add').addEventListener('click', e => {
+        e.stopPropagation();
+        reactPicker.dataset.msgId = id;
+        const r = e.target.getBoundingClientRect();
+        const top = r.top - 50;
+        reactPicker.style.left = Math.min(r.left, window.innerWidth - 230) + 'px';
+        reactPicker.style.top  = (top > 0 ? top : r.bottom + 4) + 'px';
+        reactPicker.classList.toggle('open');
+      });
+    }
+    // Clicking a quote scrolls to the referenced message
+    const quote = div.querySelector('.chat-reply-quote');
+    if (quote) {
+      quote.addEventListener('click', () => {
+        const refId = parseInt(quote.dataset.ref);
+        const refRow = msgElements.get(refId);
+        if (refRow) refRow.closest('.chat-msg')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+    }
+  }
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+socket.on('reactions', ({ msgId, reactions }) => {
+  const row = msgElements.get(msgId);
+  if (!row) return;
+  const replyBtn = row.querySelector('.reply-btn');
+  const addBtn   = row.querySelector('.react-add');
+  row.innerHTML = '';
+  for (const [emoji, ids] of Object.entries(reactions)) {
+    if (!ids.length) continue;
+    const mine = ids.includes(myId);
+    const chip = document.createElement('button');
+    chip.className = 'react-chip' + (mine ? ' mine' : '');
+    const emojiHtml = /^:[a-z0-9_]+:$/.test(emoji)
+      ? (() => { const n = emoji.slice(1,-1); const u = customEmojiClient.get(n); return u ? `<img class="custom-emoji-img" src="${u}" alt="${emoji}">` : emoji; })()
+      : emoji;
+    chip.innerHTML = `${emojiHtml}<span class="rcount">${ids.length}</span>`;
+    chip.addEventListener('click', () => socket.emit('react', { msgId, emoji }));
+    row.appendChild(chip);
+  }
+  if (replyBtn) row.appendChild(replyBtn);
+  row.appendChild(addBtn);
+});
+
+function sendChat() {
+  const msg = chatInput.value.trim();
+  if (!msg) return;
+  socket.emit('chat', { text: msg, replyTo: replyToId });
+  chatInput.value = '';
+  clearReply();
+  emojiPicker.classList.remove('open');
+}
+
+document.getElementById('chat-send').addEventListener('click', sendChat);
+chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); sendChat(); } });
+
+socket.on('chat', data => appendMessage(data));
+
+// ── Chat toggle ───────────────────────────────────────────────────────────────
+const chatPanel  = document.getElementById('chat');
+const chatToggle = document.getElementById('chat-toggle');
+chatToggle.addEventListener('click', () => {
+  const closing = !chatPanel.classList.contains('closed');
+  chatPanel.classList.toggle('closed', closing);
+  chatToggle.classList.toggle('closed', closing);
+  document.body.classList.toggle('chat-closed', closing);
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+sizeCanvas();
+draw();
+</script>
+</body>
+</html>
