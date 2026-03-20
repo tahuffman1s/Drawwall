@@ -751,6 +751,9 @@ function sizeCanvas() {
   canvas.height = window.innerHeight;
 }
 
+// Size the canvas immediately so it fills the screen even if socket setup errors
+sizeCanvas();
+
 function initOffscreen(w, h) {
   offscreen = document.createElement('canvas');
   offscreen.width  = w;
@@ -1341,9 +1344,15 @@ socket.on('init', ({ userId, name, color, users: au, pixels: ap, size, customEmo
 
   // Server already used our saved name from handshake auth; just reflect it in the input
   document.getElementById('name-in').value = name;
+
+  // Clear stale local state from any previous connection
+  for (const k of Object.keys(users)) delete users[k];
+  for (const k of Object.keys(cursors)) delete cursors[k];
   Object.assign(users, au);
   renderUsers();
 
+  // Re-initialize offscreen canvas with server pixel state
+  pixelData.clear();
   initOffscreen(CANVAS_W, CANVAS_H);
   for (const [key, col] of Object.entries(ap)) {
     pixelData.set(key, col);
@@ -1767,7 +1776,6 @@ chatToggle.addEventListener('click', () => {
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-sizeCanvas();
 draw();
 </script>
 </body>

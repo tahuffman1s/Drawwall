@@ -89,6 +89,23 @@ app.get('/api/gifs', (req, res) => {
 // ── Admin API ─────────────────────────────────────────────────────────────────
 const ADMIN_KEY = process.env.ADMIN_KEY || 'changeme';
 
+// Import needs a POST (body carries pixel data); all other admin cmds use GET
+app.post('/admin/import', (req, res) => {
+  if (req.query.key !== ADMIN_KEY) return res.status(403).json({ error: 'Forbidden' });
+  const body = req.body;
+  if (typeof body !== 'object' || Array.isArray(body))
+    return res.status(400).json({ error: 'Expected JSON object' });
+  for (const k of Object.keys(pixels)) delete pixels[k];
+  for (const [key, color] of Object.entries(body)) {
+    if (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) continue;
+    const [x, y] = key.split(',').map(Number);
+    if (x >= 0 && x < CANVAS_W && y >= 0 && y < CANVAS_H) pixels[key] = color;
+  }
+  io.emit('canvas-data', pixels);
+  saveNow();
+  return res.json({ ok: true, count: Object.keys(pixels).length });
+});
+
 app.get('/admin/:cmd', (req, res) => {
   if (req.query.key !== ADMIN_KEY) return res.status(403).json({ error: 'Forbidden' });
   const { cmd } = req.params;
@@ -100,20 +117,6 @@ app.get('/admin/:cmd', (req, res) => {
       return res.json({ ok: true, msg: 'Canvas cleared' });
     case 'export':
       return res.json(pixels);
-    case 'import': {
-      const body = req.body;
-      if (typeof body !== 'object' || Array.isArray(body))
-        return res.status(400).json({ error: 'Expected JSON object' });
-      for (const k of Object.keys(pixels)) delete pixels[k];
-      for (const [key, color] of Object.entries(body)) {
-        if (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) continue;
-        const [x, y] = key.split(',').map(Number);
-        if (x >= 0 && x < CANVAS_W && y >= 0 && y < CANVAS_H) pixels[key] = color;
-      }
-      io.emit('canvas-data', pixels);
-      saveNow();
-      return res.json({ ok: true, count: Object.keys(pixels).length });
-    }
     case 'users':
       return res.json(Object.values(users));
     case 'kick': {
