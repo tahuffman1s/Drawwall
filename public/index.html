@@ -1690,7 +1690,6 @@ async function searchGifs(q) {
       const img = document.createElement('img');
       img.className = 'gif-thumb';
       img.src = g.preview || g.url;
-      img.loading = 'lazy';
       img.addEventListener('click', () => {
         socket.emit('chat', { gif: g.url });
         gifPicker.classList.remove('open');

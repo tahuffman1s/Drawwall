@@ -12,7 +12,8 @@
       "Bash(node server.js)",
       "Bash(cmd /c \"netstat -ano | findstr :3000\")",
       "Bash(cmd /c \"netstat -ano | findstr LISTENING | findstr :3000\")",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "WebFetch(domain:api.giphy.com)"
     ]
   }
 }

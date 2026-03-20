@@ -11,6 +11,7 @@ const io     = new Server(server, { cors: { origin: '*' } });
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '64mb' }));
+app.use((req, res, next) => { res.setHeader('Access-Control-Allow-Origin', '*'); next(); });
 
 // ── Canvas state ──────────────────────────────────────────────────────────────
 const CANVAS_W  = 1000;
