@@ -69,9 +69,11 @@ const customEmojis = {};  // name -> dataUrl
 const GIPHY_KEY = process.env.GIPHY_KEY || '';
 
 app.get('/api/gifs', (req, res) => {
-  if (!GIPHY_KEY) return res.status(503).json({ error: 'GIF search is not configured. Set the GIPHY_KEY environment variable (free key at developers.giphy.com).' });
-  const q   = encodeURIComponent((req.query.q || 'funny').slice(0, 100));
-  const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${q}&limit=24&rating=g`;
+  if (!GIPHY_KEY) return res.status(503).json({ error: 'GIF search not configured — set GIPHY_KEY on Railway (free key at developers.giphy.com).' });
+  const q = (req.query.q || '').trim().slice(0, 100);
+  const url = q
+    ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&rating=g`
+    : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=24&rating=g`;
   https.get(url, apiRes => {
     let data = '';
     apiRes.on('data', c => data += c);

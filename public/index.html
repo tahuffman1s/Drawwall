@@ -1561,9 +1561,16 @@ document.getElementById('emoji-btn').addEventListener('click', e => {
 
 document.getElementById('gif-btn').addEventListener('click', e => {
   e.stopPropagation();
+  const opening = !gifPicker.classList.contains('open');
   gifPicker.classList.toggle('open');
   emojiPicker.classList.remove('open');
   document.getElementById('gif-btn').classList.toggle('active', gifPicker.classList.contains('open'));
+  if (opening) {
+    const inp = document.getElementById('gif-search-in');
+    inp.focus();
+    // Load trending GIFs immediately if search box is empty
+    if (!inp.value.trim()) searchGifs('');
+  }
 });
 
 document.addEventListener('click', e => {
@@ -1666,7 +1673,7 @@ let gifSearchTimer = null;
 document.getElementById('gif-search-in').addEventListener('input', e => {
   clearTimeout(gifSearchTimer);
   const q = e.target.value.trim();
-  if (!q) { gifGrid.innerHTML = '<div id="gif-status">Type to search GIFs</div>'; return; }
+  if (!q) { gifSearchTimer = setTimeout(() => searchGifs(''), 400); return; }
   gifSearchTimer = setTimeout(() => searchGifs(q), 400);
 });
 
