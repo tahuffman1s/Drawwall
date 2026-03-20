@@ -52,7 +52,7 @@
     /* ── Sidebar ── */
     #sidebar {
       position: fixed; top: 0; left: 0;
-      width: 200px; height: 100vh;
+      width: 220px; height: 100vh;
       background: #0d0b18;
       border-right: 2px solid #c8853a;
       box-shadow: 4px 0 28px rgba(200,133,58,0.2), inset -1px 0 0 rgba(255,200,80,0.06);
@@ -64,7 +64,7 @@
     #sidebar::-webkit-scrollbar-thumb { background: #c8853a; }
 
     h1 {
-      font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase;
+      font-size: 0.72rem; letter-spacing: 3px; text-transform: uppercase;
       text-align: center; padding: 4px 0;
       animation: magic-glow 5s ease-in-out infinite;
     }
@@ -77,8 +77,8 @@
     }
 
     .lbl {
-      font-size: 0.42rem; text-transform: uppercase; letter-spacing: 2px;
-      color: #3a3028; margin-bottom: 4px;
+      font-size: 0.52rem; text-transform: uppercase; letter-spacing: 2px;
+      color: #6a5a48; margin-bottom: 4px;
     }
     /* Fantasy section labels */
     #sidebar > div:nth-child(2) .lbl { color: #f08030; text-shadow: 0 0 6px rgba(240,128,48,0.5); }  /* torch */
@@ -92,7 +92,7 @@
     .tool-btn {
       padding: 8px 4px 6px;
       border: 2px solid #2a2030; background: #120f1e; color: #5a4a3a;
-      cursor: pointer; font-size: 0.38rem; font-family: 'Press Start 2P', monospace;
+      cursor: pointer; font-size: 0.5rem; font-family: 'Press Start 2P', monospace;
       display: flex; flex-direction: column; align-items: center; gap: 4px;
       box-shadow: 3px 3px 0 #080510;
       transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
@@ -109,6 +109,18 @@
       border-color: #c060e8; background: #150a20; box-shadow: 3px 3px 0 #4a2060;
       text-shadow: 0 0 8px rgba(192,96,232,0.9);
     }
+    .tool-btn[data-tool="rect"].active {
+      border-color: #60b8f0; background: #04121e; box-shadow: 3px 3px 0 #103050;
+      text-shadow: 0 0 8px rgba(96,184,240,0.9);
+    }
+    .tool-btn[data-tool="circle"].active {
+      border-color: #50c878; background: #041408; box-shadow: 3px 3px 0 #104820;
+      text-shadow: 0 0 8px rgba(80,200,120,0.9);
+    }
+    .tool-btn[data-tool="select"].active {
+      border-color: #f0c040; background: #181000; box-shadow: 3px 3px 0 #604800;
+      text-shadow: 0 0 8px rgba(240,192,64,0.9); border-style: dashed;
+    }
 
     /* ── Palette ── */
     #palette { display: grid; grid-template-columns: repeat(6,1fr); gap: 2px; }
@@ -122,7 +134,7 @@
 
     #cc-row { margin-top: 4px; display: flex; align-items: center; gap: 6px; }
     #cc { width: 24px; height: 18px; border: 2px solid #333; cursor: pointer; padding: 0; }
-    #cc-lbl { font-size: 0.42rem; color: #444; font-family: 'Press Start 2P', monospace; }
+    #cc-lbl { font-size: 0.52rem; color: #7a6848; font-family: 'Press Start 2P', monospace; }
 
     /* ── Size ── */
     #size-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
@@ -142,7 +154,7 @@
       cursor: pointer; border: none; border-radius: 0;
     }
     #size-lbl {
-      font-size: 0.42rem; color: #f0c040; min-width: 18px; text-align: right;
+      font-size: 0.52rem; color: #f0c040; min-width: 20px; text-align: right;
       font-family: 'Press Start 2P', monospace;
       text-shadow: 0 0 6px rgba(240,192,64,0.6);
     }
@@ -158,23 +170,33 @@
     }
     .zbtn:hover { background: #1a1428; color: #f0c040; }
     .zbtn:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #080510; }
-    #zlbl { flex:1; text-align:center; font-size: 0.5rem; color: #f0c040;
+    #zlbl { flex:1; text-align:center; font-size: 0.62rem; color: #f0c040;
       text-shadow: 0 0 8px rgba(240,192,64,0.7); }
     #zfit {
       padding: 0 5px; height: 22px; border: 2px solid #2a2030; background: #120f1e;
-      color: #7a6040; font-size: 0.35rem; cursor: pointer;
+      color: #7a6040; font-size: 0.46rem; cursor: pointer;
       font-family: 'Press Start 2P', monospace;
       box-shadow: 2px 2px 0 #080510; transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
     }
     #zfit:hover { background: #1a1428; color: #f0c040; }
     #zfit:active { transform: translate(1px,1px); box-shadow: 1px 1px 0 #080510; }
 
+    /* ── PNG export ── */
+    #png-btn {
+      width: 100%; padding: 6px 0; border: 2px solid #1a5a30; background: #0a1e10;
+      color: #50c878; font-size: 0.5rem; cursor: pointer;
+      font-family: 'Press Start 2P', monospace; letter-spacing: 1px;
+      box-shadow: 2px 2px 0 #080510; transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
+    }
+    #png-btn:hover { background: #0e2818; color: #80f0a0; border-color: #50c878; }
+    #png-btn:active { transform: translate(2px,2px); box-shadow: 0 0 0 #080510; }
+
     /* ── Name ── */
     #name-row { display: flex; gap: 4px; }
     #name-in {
       flex:1; min-width:0; padding: 5px 6px;
       border: 2px solid #2a2030; background: #0a0814; color: #c8a870;
-      font-size: 0.42rem; outline: none; font-family: 'Press Start 2P', monospace;
+      font-size: 0.52rem; outline: none; font-family: 'Press Start 2P', monospace;
     }
     #name-in:focus { border-color: #f0c040; box-shadow: 0 0 8px rgba(240,192,64,0.3); }
     #name-btn {
@@ -191,25 +213,29 @@
     #users-wrap::-webkit-scrollbar-thumb { background: #222; }
     #users { list-style:none; display:flex; flex-direction:column; gap:2px; }
     #users li {
-      display:flex; align-items:center; gap:5px;
-      padding: 5px 5px; background: #0c0a16;
+      display:flex; align-items:center; gap:6px;
+      padding: 6px 6px; background: #0c0a16;
       border: 1px solid #1e1828; border-left: 3px solid #2a2030;
-      font-size: 0.38rem;
+      font-size: 0.5rem; transition: background 0.1s, border-left-color 0.1s;
     }
-    .udot { width:7px; height:7px; flex-shrink:0; }
-    .uname { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#a09070; }
-    .uyou { font-size: 0.35rem; color: #50c878; text-shadow: 0 0 6px rgba(80,200,120,0.8); }
+    #users li.clickable { cursor: pointer; }
+    #users li.clickable:hover { background: #14101e; border-left-color: #60b8f0; }
+    .udot { width:8px; height:8px; flex-shrink:0; }
+    .uname { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#c0a878; }
+    .uyou  { font-size: 0.44rem; color: #50c878; text-shadow: 0 0 6px rgba(80,200,120,0.8); }
+    .ufocus { font-size: 0.7rem; opacity: 0.3; transition: opacity 0.1s; }
+    #users li.clickable:hover .ufocus { opacity: 1; }
 
     /* ── HUDs ── */
     #coord-hud, #zoom-hud, #hint-hud {
       position: fixed; pointer-events: none;
-      font-size: 0.42rem; z-index: 50;
+      font-size: 0.52rem; z-index: 50;
       background: rgba(0,0,0,0.85); border: 1px solid #222;
       padding: 4px 8px;
     }
-    #coord-hud { bottom:12px; left:212px; color:#50c878; text-shadow:0 0 8px rgba(80,200,120,0.7); font-family:'Press Start 2P',monospace; border-color:#0a1e12; background:rgba(10,14,20,0.9); }
+    #coord-hud { bottom:12px; left:232px; color:#50c878; text-shadow:0 0 8px rgba(80,200,120,0.7); font-family:'Press Start 2P',monospace; border-color:#0a1e12; background:rgba(10,14,20,0.9); }
     #zoom-hud  { top:12px; right:276px; color:#f0c040; text-shadow:0 0 10px rgba(240,192,64,0.8); border-color:#2a1e00; background:rgba(12,10,18,0.9); }
-    #hint-hud  { bottom:12px; right:276px; color:#3a2e1e; text-align:right; line-height:2.2; border-color:#1e1828; background:rgba(10,8,16,0.85); }
+    #hint-hud  { bottom:12px; right:276px; color:#6a5e4e; text-align:right; line-height:2.2; border-color:#1e1828; background:rgba(10,8,16,0.85); }
     body.chat-closed #zoom-hud { right: 28px; }
     body.chat-closed #hint-hud { right: 28px; }
 
@@ -262,14 +288,14 @@
     }
     .ct-lbl {
       writing-mode: vertical-rl;
-      font-size: 0.38rem; letter-spacing: 3px; text-transform: uppercase;
+      font-size: 0.5rem; letter-spacing: 3px; text-transform: uppercase;
       color: rgba(240,208,128,0.9); user-select: none;
       font-family: 'Press Start 2P', monospace;
     }
 
     #chat-header {
       padding: 10px 10px 8px;
-      font-size: 0.5rem; letter-spacing: 3px; text-transform: uppercase;
+      font-size: 0.62rem; letter-spacing: 3px; text-transform: uppercase;
       color: #c080f8;
       text-shadow: 0 0 8px rgba(192,128,248,0.7);
       border-bottom: 2px solid #1e1828;
@@ -288,16 +314,16 @@
 
     .chat-msg { display:flex; flex-direction:column; gap:2px; padding: 5px 6px; border-left: 2px solid #1e1828; }
     .chat-msg:hover { border-left-color: #5a3890; background: rgba(120,80,200,0.04); }
-    .chat-msg-meta { font-size:0.48rem; display:flex; align-items:baseline; gap:5px; }
-    .chat-msg-author { font-size: 0.55rem; }
-    .chat-msg-time { color: #2e2438; }
+    .chat-msg-meta { font-size:0.55rem; display:flex; align-items:baseline; gap:5px; }
+    .chat-msg-author { font-size: 0.65rem; }
+    .chat-msg-time { color: #5a4e68; }
     .chat-msg-body {
-      font-size: 0.65rem; color: #a09070; line-height: 1.9;
+      font-size: 0.72rem; color: #c0b088; line-height: 1.9;
       word-break: break-word; padding-left: 2px;
       font-family: 'Press Start 2P', monospace;
     }
     .chat-msg.system .chat-msg-body {
-      color: #f0c040; font-size: 0.55rem;
+      color: #f0c040; font-size: 0.68rem;
       text-shadow: 0 0 6px rgba(240,192,64,0.6);
     }
 
@@ -310,7 +336,7 @@
     #chat-input {
       flex:1; min-width:0; padding: 6px 6px;
       border: 2px solid #2a2040; background: #0a0814;
-      color: #c8a870; font-size: 0.42rem; outline: none;
+      color: #c8a870; font-size: 0.52rem; outline: none;
       font-family: 'Press Start 2P', monospace;
       user-select: text;
     }
@@ -325,7 +351,7 @@
     }
     #emoji-btn { width: 28px; font-size: 0.85rem; color: #f0c040; border-color: #2a1e00; background: #120f1e; }
     #emoji-btn:hover { background: #1a1200; border-color: #f0c040; box-shadow: 2px 2px 0 #604800, 0 0 12px rgba(240,192,64,0.5); }
-    #gif-btn { padding: 0 6px; font-size: 0.35rem; letter-spacing: 1px; color: #50c878; border-color: #082010; background: #120f1e; }
+    #gif-btn { padding: 0 6px; font-size: 0.46rem; letter-spacing: 1px; color: #50c878; border-color: #082010; background: #120f1e; }
     #gif-btn:hover, #gif-btn.active { background: #081408; border-color: #50c878; color: #50c878; box-shadow: 2px 2px 0 #184830, 0 0 12px rgba(80,200,120,0.4); }
     #emoji-btn:active, #gif-btn:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #000; }
 
@@ -357,7 +383,7 @@
     .emoji-tabs { display:flex; gap:3px; margin-bottom:5px; }
     .emoji-tab {
       flex:1; padding: 4px 2px; border: 2px solid #2a2040;
-      background: #0a0814; color: #4a3860; font-size: 0.35rem;
+      background: #0a0814; color: #4a3860; font-size: 0.46rem;
       font-family: 'Press Start 2P', monospace; cursor: pointer;
       box-shadow: 2px 2px 0 #080510; transition: transform 0.06s, box-shadow 0.06s, color 0.1s;
     }
@@ -380,7 +406,7 @@
     }
     .cep-btn:hover { background: #1a1a1a; outline: 2px solid #333; }
     .cep-btn img { width: 20px; height: 20px; object-fit: contain; image-rendering: pixelated; }
-    .cep-btn span { font-size: 0.3rem; color: #444; font-family: 'Press Start 2P', monospace; }
+    .cep-btn span { font-size: 0.4rem; color: #666; font-family: 'Press Start 2P', monospace; }
 
     /* ── GIF picker ── */
     #gif-picker {
@@ -391,7 +417,7 @@
     #gif-picker.open { display: flex; }
     #gif-search-in {
       padding: 5px 6px; border: 2px solid #2a2040;
-      background: #0a0814; color: #c8a870; font-size: 0.42rem; outline: none;
+      background: #0a0814; color: #c8a870; font-size: 0.52rem; outline: none;
       font-family: 'Press Start 2P', monospace;
     }
     #gif-search-in:focus { border-color: #c080f8; }
@@ -401,7 +427,7 @@
       transition: opacity 0.1s, outline 0.05s; background: #111;
     }
     .gif-thumb:hover { opacity: 0.8; outline: 2px solid #f0c040; }
-    #gif-status { font-size: 0.38rem; color: #333; text-align:center; padding:16px 0; font-family:'Press Start 2P',monospace; }
+    #gif-status { font-size: 0.5rem; color: #555; text-align:center; padding:16px 0; font-family:'Press Start 2P',monospace; }
 
     /* ── Chat GIF / custom emoji ── */
     .chat-gif { max-width:100%; max-height:160px; margin-top:4px; display:block; object-fit:contain; image-rendering:pixelated; }
@@ -419,7 +445,7 @@
     .react-chip:hover { background: #1a1428; border-color: #f0c040; box-shadow: 2px 2px 0 #604800; }
     .react-chip:active { transform:translate(1px,1px); box-shadow:1px 1px 0 #080510; }
     .react-chip.mine { border-color: #c060e8; background: #180a28; color:#e0c0ff; box-shadow:2px 2px 0 #4a2060; }
-    .react-chip .rcount { font-size: 0.35rem; color: #5a4868; font-family:'Press Start 2P',monospace; }
+    .react-chip .rcount { font-size: 0.46rem; color: #7a6888; font-family:'Press Start 2P',monospace; }
     .react-chip.mine .rcount { color: #c080f8; }
     .react-add, .reply-btn {
       height: 18px; border: 1px dashed #2a2a2a; background: none;
@@ -467,7 +493,7 @@
       padding: 20px; width: 280px; display:flex; flex-direction:column; gap:12px;
       box-shadow: 8px 8px 0 #7a0020;
     }
-    #eum-title { font-size:0.55rem; color:#f0c040; text-transform:uppercase; letter-spacing:2px; text-shadow:0 0 8px rgba(240,192,64,0.7); }
+    #eum-title { font-size:0.65rem; color:#f0c040; text-transform:uppercase; letter-spacing:2px; text-shadow:0 0 8px rgba(240,192,64,0.7); }
     #eum-preview-wrap {
       width:80px; height:80px; border: 2px dashed #3a2858;
       align-self:center; display:flex; align-items:center; justify-content:center;
@@ -478,15 +504,15 @@
     #eum-preview-placeholder { font-size:2rem; pointer-events:none; }
     #eum-name {
       padding:7px 8px; border:2px solid #2a2040; background:#0a0814;
-      color:#c8a870; font-size:0.45rem; outline:none;
+      color:#c8a870; font-size:0.55rem; outline:none;
       font-family:'Press Start 2P',monospace;
     }
     #eum-name:focus { border-color:#f0c040; }
-    #eum-file-hint { font-size:0.38rem; color:#4a3860; text-align:center; font-family:'Press Start 2P',monospace; }
+    #eum-file-hint { font-size:0.5rem; color:#6a5880; text-align:center; font-family:'Press Start 2P',monospace; }
     #eum-btns { display:flex; gap:8px; }
     #eum-save {
       flex:1; padding:8px; border:2px solid #604800;
-      background:linear-gradient(135deg,#f08030,#c86010); color:#fff; font-size:0.45rem; cursor:pointer;
+      background:linear-gradient(135deg,#f08030,#c86010); color:#fff; font-size:0.55rem; cursor:pointer;
       font-family:'Press Start 2P',monospace; box-shadow:3px 3px 0 #3a2000;
       transition:transform 0.06s, box-shadow 0.06s;
     }
@@ -543,6 +569,21 @@
           <path d="M20 20H7L3 16l10-10 7 7-1.5 1.5"/><path d="M6.5 17.5l5-5"/>
         </svg>Eraser
       </button>
+      <button class="tool-btn" data-tool="rect">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="5" width="18" height="14" rx="0"/>
+        </svg>Rect
+      </button>
+      <button class="tool-btn" data-tool="circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/>
+        </svg>Circle
+      </button>
+      <button class="tool-btn" data-tool="select" style="grid-column:span 2">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3 2">
+          <rect x="3" y="3" width="18" height="18"/>
+        </svg>Select
+      </button>
     </div>
   </div>
 
@@ -579,6 +620,10 @@
       <input id="name-in" type="text" maxlength="24" placeholder="Your name…" />
       <button id="name-btn">✓</button>
     </div>
+  </div>
+
+  <div>
+    <button id="png-btn">⬇ Save PNG</button>
   </div>
 
   <div id="users-wrap">
@@ -647,7 +692,7 @@
 
 <div id="coord-hud">—, —</div>
 <div id="zoom-hud">1×</div>
-<div id="hint-hud">Scroll: zoom · Space/Right-click: pan</div>
+<div id="hint-hud">Scroll: zoom · Space/Right-click: pan · P:pen E:eraser R:rect C:circle S:select · Ctrl+A/C/X/V</div>
 
 <script src="https://drawwall-production.up.railway.app/socket.io/socket.io.js"></script>
 <script>
@@ -677,6 +722,16 @@ let tool = 'pen', penColor = '#000000', penSize = 1;
 let isDrawing = false, isPanning = false, spaceDown = false;
 let panSX = 0, panSY = 0, panOX = 0, panOY = 0;
 let lastPx = -1, lastPy = -1;
+let startPx = -1, startPy = -1;
+
+// ── Selection state ───────────────────────────────────────────────────────────
+let selState = 'none';   // 'none' | 'selecting' | 'selected' | 'moving'
+let selX0 = 0, selY0 = 0, selX1 = 0, selY1 = 0;
+let floatingPixels = null;   // Map<"dx,dy", color>
+let floatingCanvas = null;
+let floatingOriginX = 0, floatingOriginY = 0;
+let clipboard = null;        // { pixels: Map, w, h }
+let marchOffset = 0, marchTimer = null;
 let hoverPx = -1, hoverPy = -1;
 
 const pixelData = new Map();
@@ -773,8 +828,35 @@ function draw() {
     }
   }
 
+  // Shape drag preview
+  if (isDrawing && (tool === 'rect' || tool === 'circle') && startPx >= 0) {
+    const px0 = Math.min(startPx, hoverPx), py0 = Math.min(startPy, hoverPy);
+    const sx0 = offsetX + px0 * cellSize;
+    const sy0 = offsetY + py0 * cellSize;
+    const sw  = (Math.abs(hoverPx - startPx) + 1) * cellSize;
+    const sh  = (Math.abs(hoverPy - startPy) + 1) * cellSize;
+    ctx.save();
+    ctx.strokeStyle = penColor;
+    ctx.lineWidth = 1.5;
+    ctx.globalAlpha = 0.75;
+    ctx.setLineDash([4, 4]);
+    if (tool === 'rect') {
+      ctx.strokeRect(sx0 + 0.5, sy0 + 0.5, sw - 1, sh - 1);
+    } else {
+      const side = Math.min(sw, sh);
+      const ccx = sx0 + sw / 2, ccy = sy0 + sh / 2;
+      ctx.beginPath();
+      ctx.arc(ccx, ccy, side / 2 - 0.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 0.15;
+      ctx.setLineDash([2, 6]);
+      ctx.strokeRect(sx0 + 0.5, sy0 + 0.5, sw - 1, sh - 1);
+    }
+    ctx.restore();
+  }
+
   // Hover brush preview
-  if (hoverPx >= 0 && hoverPx < CANVAS_W && hoverPy >= 0 && hoverPy < CANVAS_H) {
+  if (!isDrawing && hoverPx >= 0 && hoverPx < CANVAS_W && hoverPy >= 0 && hoverPy < CANVAS_H) {
     const half = Math.floor(penSize / 2);
     const bx = hoverPx - half, by = hoverPy - half;
     const sx = offsetX + bx * cellSize, sy = offsetY + by * cellSize;
@@ -791,6 +873,33 @@ function draw() {
     ctx.lineWidth = 1;
     ctx.strokeRect(sx + 0.5, sy + 0.5, bw - 1, bh - 1);
   }
+
+  // Floating selection pixels
+  if (floatingCanvas && selState !== 'none') {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.globalAlpha = 0.92;
+    ctx.drawImage(floatingCanvas,
+      offsetX + selX0 * cellSize, offsetY + selY0 * cellSize,
+      (selX1 - selX0 + 1) * cellSize, (selY1 - selY0 + 1) * cellSize);
+    ctx.restore();
+  }
+
+  // Marching ants selection border
+  if (selState !== 'none') {
+    const sx = offsetX + selX0 * cellSize, sy = offsetY + selY0 * cellSize;
+    const sw = (selX1 - selX0 + 1) * cellSize, sh = (selY1 - selY0 + 1) * cellSize;
+    ctx.save();
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.lineDashOffset = -marchOffset;
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
+    ctx.lineDashOffset = -(marchOffset + 4);
+    ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+    ctx.strokeRect(sx + 0.5, sy + 0.5, sw - 1, sh - 1);
+    ctx.restore();
+  }
 }
 
 // ── Zoom / pan ────────────────────────────────────────────────────────────────
@@ -799,6 +908,14 @@ function setZoomLabel(z) {
   document.getElementById('zoom-hud').textContent = z + '×';
   // color the zoom hud: gold → ember → arcane at high zoom
   document.getElementById('zoom-hud').style.color = z >= 16 ? '#c060e8' : z >= 8 ? '#f08030' : '#f0c040';
+}
+
+function zoomToPixel(px, py) {
+  cellSize = Math.max(8, Math.min(MAX_CELL, cellSize < 8 ? 8 : cellSize));
+  offsetX  = Math.round(canvas.width  / 2 - (px + 0.5) * cellSize);
+  offsetY  = Math.round(canvas.height / 2 - (py + 0.5) * cellSize);
+  setZoomLabel(cellSize);
+  redraw();
 }
 
 function fitToView() {
@@ -860,6 +977,32 @@ function line(x0, y0, x1, y1, erase) {
   }
 }
 
+function plotCircle(cx, cy, r, erase) {
+  if (r < 0) return;
+  if (r === 0) { putBrush(cx, cy, erase); return; }
+  let x = 0, y = r, d = 1 - r;
+  const plot8 = (ox, oy) => {
+    putBrush(cx+ox, cy+oy, erase); putBrush(cx-ox, cy+oy, erase);
+    putBrush(cx+ox, cy-oy, erase); putBrush(cx-ox, cy-oy, erase);
+    putBrush(cx+oy, cy+ox, erase); putBrush(cx-oy, cy+ox, erase);
+    putBrush(cx+oy, cy-ox, erase); putBrush(cx-oy, cy-ox, erase);
+  };
+  plot8(x, y);
+  while (x < y) {
+    if (d < 0) d += 2*x + 3;
+    else { d += 2*(x-y) + 5; y--; }
+    x++;
+    plot8(x, y);
+  }
+}
+
+function plotRect(x0, y0, x1, y1, erase) {
+  const lx = Math.min(x0,x1), rx = Math.max(x0,x1);
+  const ty = Math.min(y0,y1), by = Math.max(y0,y1);
+  for (let x = lx; x <= rx; x++) { putBrush(x, ty, erase); putBrush(x, by, erase); }
+  for (let y = ty+1; y < by; y++) { putBrush(lx, y, erase); putBrush(rx, y, erase); }
+}
+
 // ── Events ────────────────────────────────────────────────────────────────────
 function pos(e) {
   const src = e.touches ? e.touches[0] : e;
@@ -882,8 +1025,20 @@ canvas.addEventListener('mousedown', e => {
   if (e.button === 0) {
     isDrawing = true;
     const { px, py } = toPixel(e.clientX, e.clientY);
-    lastPx = px; lastPy = py;
-    line(px, py, px, py, tool === 'eraser');
+    lastPx = px; lastPy = py; startPx = px; startPy = py;
+    if (tool === 'select') {
+      if (selState === 'selected' && selContains(px, py)) {
+        selState = 'moving';
+        liftSelection();
+      } else {
+        commitFloating();
+        selState = 'selecting';
+        selX0 = selX1 = px; selY0 = selY1 = py;
+        startMarching();
+      }
+    } else if (tool === 'pen' || tool === 'eraser') {
+      line(px, py, px, py, tool === 'eraser');
+    }
     redraw();
   }
 });
@@ -907,10 +1062,27 @@ canvas.addEventListener('mousemove', e => {
     canvas._lastCursor = now;
     if (px >= 0 && px < CANVAS_W && py >= 0 && py < CANVAS_H) socket.emit('cursor', { px, py });
   }
-  if (isDrawing && (px !== lastPx || py !== lastPy)) {
-    line(lastPx, lastPy, px, py, tool === 'eraser');
-    lastPx = px; lastPy = py;
+  if (isDrawing) {
+    if (tool === 'select') {
+      if (selState === 'selecting') {
+        selX0 = Math.min(startPx, px); selY0 = Math.min(startPy, py);
+        selX1 = Math.max(startPx, px); selY1 = Math.max(startPy, py);
+      } else if (selState === 'moving') {
+        const ddx = px - lastPx, ddy = py - lastPy;
+        selX0 += ddx; selY0 += ddy; selX1 += ddx; selY1 += ddy;
+        lastPx = px; lastPy = py;
+      }
+    } else if ((tool === 'pen' || tool === 'eraser') && (px !== lastPx || py !== lastPy)) {
+      line(lastPx, lastPy, px, py, tool === 'eraser');
+      lastPx = px; lastPy = py;
+    } else if (tool === 'rect' || tool === 'circle') {
+      lastPx = px; lastPy = py;
+    }
     redraw();
+  }
+  if (tool === 'select' && !isPanning && !spaceDown) {
+    canvas.style.cursor = (selState === 'moving' || (selState === 'selected' && selContains(px, py)))
+      ? 'move' : 'crosshair';
   }
 });
 
@@ -918,7 +1090,22 @@ window.addEventListener('mouseup', () => {
   if (isPanning) { isPanning = false; canvas.style.cursor = spaceDown ? 'grab' : 'crosshair'; }
   if (isDrawing) {
     isDrawing = false;
-    if (pendingBatch.length) { clearTimeout(flushTimer); flushTimer = null; socket.emit('pixels', pendingBatch); pendingBatch = []; }
+    if (tool === 'select') {
+      if (selState === 'selecting') { selState = 'selected'; }
+      else if (selState === 'moving') { selState = 'selected'; commitFloating(); }
+      redraw();
+    } else {
+      if (tool === 'rect') {
+        plotRect(startPx, startPy, lastPx, lastPy, false); redraw();
+      } else if (tool === 'circle') {
+        const cx = Math.round((startPx + lastPx) / 2);
+        const cy = Math.round((startPy + lastPy) / 2);
+        const r  = Math.round(Math.min(Math.abs(lastPx - startPx), Math.abs(lastPy - startPy)) / 2);
+        plotCircle(cx, cy, r, false); redraw();
+      }
+      if (pendingBatch.length) { clearTimeout(flushTimer); flushTimer = null; socket.emit('pixels', pendingBatch); pendingBatch = []; }
+    }
+    startPx = -1; startPy = -1;
   }
 });
 
@@ -932,21 +1119,135 @@ canvas.addEventListener('wheel', e => {
 window.addEventListener('keydown', e => {
   if (e.target.matches('input')) return;
   if (e.code === 'Space') { e.preventDefault(); spaceDown = true; canvas.style.cursor = 'grab'; }
-  if (e.code === 'KeyE') setTool('eraser');
-  if (e.code === 'KeyP' || e.code === 'KeyB') setTool('pen');
+  const noMod = !e.ctrlKey && !e.metaKey && !e.altKey;
+  if (noMod && e.code === 'KeyE') setTool('eraser');
+  if (noMod && (e.code === 'KeyP' || e.code === 'KeyB')) setTool('pen');
+  if (noMod && e.code === 'KeyR') setTool('rect');
+  if (noMod && e.code === 'KeyC') setTool('circle');
+  if (noMod && e.code === 'KeyS') setTool('select');
   if (e.code === 'BracketRight') zoomAt(1,  canvas.width/2, canvas.height/2);
   if (e.code === 'BracketLeft')  zoomAt(-1, canvas.width/2, canvas.height/2);
-  if (e.code === 'KeyF') fitToView();
-  if (e.code === 'Comma')  setSize(penSize - 1);
-  if (e.code === 'Period') setSize(penSize + 1);
+  if (noMod && e.code === 'KeyF') fitToView();
+  if (noMod && e.code === 'Comma')  setSize(penSize - 1);
+  if (noMod && e.code === 'Period') setSize(penSize + 1);
+  if (e.code === 'Escape' && selState !== 'none') deselect();
+  if ((e.code === 'Delete' || e.code === 'Backspace') && selState !== 'none') deleteSelection();
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyA') { e.preventDefault(); if (selState !== 'none') deselect(); setTool('select'); selX0 = 0; selY0 = 0; selX1 = CANVAS_W-1; selY1 = CANVAS_H-1; selState = 'selected'; startMarching(); redraw(); }
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyC' && selState !== 'none') { e.preventDefault(); copySelection(); }
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyX' && selState !== 'none') { e.preventDefault(); copySelection(); deleteSelection(); }
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV') { e.preventDefault(); if (!e.target.matches('input,textarea')) pasteClipboard(); }
 });
 window.addEventListener('keyup', e => {
   if (e.code === 'Space') { spaceDown = false; if (!isPanning) canvas.style.cursor = 'crosshair'; }
 });
 window.addEventListener('resize', () => { sizeCanvas(); redraw(); });
+// Block OS clipboard paste (images etc.) everywhere except text inputs
+document.addEventListener('paste', e => { if (!e.target.matches('input,textarea')) e.preventDefault(); });
+
+// ── Selection helpers ─────────────────────────────────────────────────────────
+function selContains(px, py) {
+  return px >= selX0 && px <= selX1 && py >= selY0 && py <= selY1;
+}
+function startMarching() {
+  if (marchTimer) return;
+  marchTimer = setInterval(() => { marchOffset = (marchOffset + 1) % 16; redraw(); }, 80);
+}
+function stopMarching() { clearInterval(marchTimer); marchTimer = null; }
+
+function buildFloatingCanvas() {
+  const w = Math.max(1, selX1 - selX0 + 1), h = Math.max(1, selY1 - selY0 + 1);
+  floatingCanvas = document.createElement('canvas');
+  floatingCanvas.width = w; floatingCanvas.height = h;
+  const fCtx = floatingCanvas.getContext('2d');
+  for (const [rel, color] of floatingPixels) {
+    const [dx, dy] = rel.split(',').map(Number);
+    fCtx.fillStyle = color; fCtx.fillRect(dx, dy, 1, 1);
+  }
+}
+function liftSelection() {
+  floatingOriginX = selX0; floatingOriginY = selY0;
+  floatingPixels = new Map();
+  for (let y = selY0; y <= selY1; y++) {
+    for (let x = selX0; x <= selX1; x++) {
+      const color = pixelData.get(`${x},${y}`);
+      if (color) floatingPixels.set(`${x - selX0},${y - selY0}`, color);
+      pixelData.delete(`${x},${y}`);
+      offCtx.fillStyle = '#ffffff'; offCtx.fillRect(x, y, 1, 1);
+    }
+  }
+  buildFloatingCanvas();
+}
+function commitFloating() {
+  if (!floatingPixels) return;
+  const batch = [];
+  for (const [rel] of floatingPixels) {
+    const [dx, dy] = rel.split(',').map(Number);
+    const ox = floatingOriginX + dx, oy = floatingOriginY + dy;
+    if (ox >= 0 && ox < CANVAS_W && oy >= 0 && oy < CANVAS_H)
+      batch.push({ x: ox, y: oy, erase: true });
+  }
+  for (const [rel, color] of floatingPixels) {
+    const [dx, dy] = rel.split(',').map(Number);
+    const nx = selX0 + dx, ny = selY0 + dy;
+    if (nx >= 0 && nx < CANVAS_W && ny >= 0 && ny < CANVAS_H) {
+      pixelData.set(`${nx},${ny}`, color);
+      offCtx.fillStyle = color; offCtx.fillRect(nx, ny, 1, 1);
+      batch.push({ x: nx, y: ny, color });
+    }
+  }
+  if (batch.length) socket.emit('pixels', batch);
+  floatingPixels = null; floatingCanvas = null;
+}
+function deselect() {
+  commitFloating();
+  selState = 'none'; stopMarching(); redraw();
+}
+function deleteSelection() {
+  if (selState === 'none') return;
+  if (floatingPixels) { floatingPixels = null; floatingCanvas = null; }
+  else {
+    const batch = [];
+    for (let y = selY0; y <= selY1; y++)
+      for (let x = selX0; x <= selX1; x++)
+        if (pixelData.has(`${x},${y}`)) {
+          pixelData.delete(`${x},${y}`);
+          offCtx.fillStyle = '#ffffff'; offCtx.fillRect(x, y, 1, 1);
+          batch.push({ x, y, erase: true });
+        }
+    if (batch.length) socket.emit('pixels', batch);
+  }
+  selState = 'none'; stopMarching(); redraw();
+}
+function copySelection() {
+  if (selState === 'none') return;
+  clipboard = { pixels: new Map(), w: selX1 - selX0 + 1, h: selY1 - selY0 + 1 };
+  const src = floatingPixels || (() => {
+    const m = new Map();
+    for (let y = selY0; y <= selY1; y++)
+      for (let x = selX0; x <= selX1; x++) {
+        const c = pixelData.get(`${x},${y}`); if (c) m.set(`${x-selX0},${y-selY0}`, c);
+      }
+    return m;
+  })();
+  clipboard.pixels = new Map(src);
+}
+function pasteClipboard() {
+  if (!clipboard) return;
+  commitFloating();
+  const cx = Math.round((-offsetX + canvas.width / 2) / cellSize - clipboard.w / 2);
+  const cy = Math.round((-offsetY + canvas.height / 2) / cellSize - clipboard.h / 2);
+  selX0 = cx; selY0 = cy; selX1 = cx + clipboard.w - 1; selY1 = cy + clipboard.h - 1;
+  floatingPixels = new Map(clipboard.pixels);
+  floatingOriginX = -999999; floatingOriginY = -999999;
+  buildFloatingCanvas();
+  selState = 'selected';
+  setTool('select');
+  startMarching(); redraw();
+}
 
 // ── Controls ──────────────────────────────────────────────────────────────────
 function setTool(t) {
+  if (tool === 'select' && t !== 'select') deselect();
   tool = t;
   document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
 }
@@ -987,6 +1288,18 @@ document.getElementById('zminus').addEventListener('click', () => zoomAt(-1, can
 document.getElementById('zplus').addEventListener('click',  () => zoomAt(1,  canvas.width/2, canvas.height/2));
 document.getElementById('zfit').addEventListener('click', fitToView);
 
+document.getElementById('png-btn').addEventListener('click', () => {
+  if (!offscreen) return;
+  offscreen.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `drawwall-${Date.now()}.png`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+});
+
 function submitName() {
   const v = document.getElementById('name-in').value.trim();
   if (v) socket.emit('set-name', v);
@@ -1001,9 +1314,17 @@ function renderUsers() {
   document.getElementById('ucount').textContent = Object.keys(users).length;
   Object.values(users).forEach(u => {
     const li = document.createElement('li');
+    const isMe = u.id === myId;
     li.innerHTML = `<div class="udot" style="background:${u.color};box-shadow:0 0 6px ${u.color}"></div>
       <span class="uname">${esc(u.name)}</span>
-      ${u.id === myId ? '<span class="uyou">you</span>' : ''}`;
+      ${isMe ? '<span class="uyou">you</span>' : '<span class="ufocus" title="Click to follow">🎯</span>'}`;
+    if (!isMe) {
+      li.classList.add('clickable');
+      li.addEventListener('click', () => {
+        const c = cursors[u.id];
+        if (c) zoomToPixel(c.px, c.py);
+      });
+    }
     ul.appendChild(li);
   });
 }
@@ -1048,6 +1369,20 @@ socket.on('cursor', ({ userId, px, py, color, name }) => {
 socket.on('user-joined',  u => { users[u.id] = u; renderUsers(); });
 socket.on('user-updated', u => { users[u.id] = u; if (cursors[u.id]) cursors[u.id].name = u.name; renderUsers(); });
 socket.on('user-left',    id => { delete users[id]; delete cursors[id]; renderUsers(); redraw(); });
+
+socket.on('canvas-data', newPixels => {
+  if (!offscreen) return;
+  pixelData.clear();
+  offCtx.fillStyle = '#ffffff';
+  offCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  for (const [key, color] of Object.entries(newPixels)) {
+    const [x, y] = key.split(',').map(Number);
+    pixelData.set(key, color);
+    offCtx.fillStyle = color;
+    offCtx.fillRect(x, y, 1, 1);
+  }
+  redraw();
+});
 
 socket.on('clear', () => {
   if (!offscreen) return;
@@ -1275,7 +1610,7 @@ document.getElementById('gif-search-in').addEventListener('input', e => {
 async function searchGifs(q) {
   gifGrid.innerHTML = '<div id="gif-status">Searching…</div>';
   try {
-    const res  = await fetch(`/api/gifs?q=${encodeURIComponent(q)}`);
+    const res  = await fetch(`${SERVER_URL}/api/gifs?q=${encodeURIComponent(q)}`);
     const gifs = await res.json();
     gifGrid.innerHTML = '';
     if (!gifs.length) { gifGrid.innerHTML = '<div id="gif-status">No results</div>'; return; }

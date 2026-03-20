@@ -3,17 +3,43 @@ const http    = require('http');
 const https   = require('https');
 const { Server } = require('socket.io');
 const path    = require('path');
+const fs      = require('fs');
 
 const app    = express();
 const server = http.createServer(app);
 const io     = new Server(server, { cors: { origin: '*' } });
 
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json({ limit: '64mb' }));
 
 // ── Canvas state ──────────────────────────────────────────────────────────────
-const CANVAS_W = 1000;
-const CANVAS_H = 1000;
-const pixels   = {};
+const CANVAS_W  = 1000;
+const CANVAS_H  = 1000;
+const pixels    = {};
+const SAVE_FILE = path.join(__dirname, 'canvas.json');
+
+// Load persisted canvas on startup
+try {
+  const saved = JSON.parse(fs.readFileSync(SAVE_FILE, 'utf8'));
+  for (const [k, v] of Object.entries(saved)) {
+    if (typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)) pixels[k] = v;
+  }
+  console.log(`Loaded ${Object.keys(pixels).length} pixels from canvas.json`);
+} catch { /* no save file yet */ }
+
+// Debounced save (max once per 5 s during active drawing)
+let saveTimer = null;
+function scheduleSave() {
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => { saveTimer = null; saveNow(); }, 5000);
+}
+function saveNow() {
+  fs.writeFileSync(SAVE_FILE, JSON.stringify(pixels));
+}
+
+// Save on shutdown
+process.on('exit',   saveNow);
+process.on('SIGINT', () => { saveNow(); process.exit(); });
 
 // ── User state ────────────────────────────────────────────────────────────────
 const users = {};
@@ -67,7 +93,24 @@ app.get('/admin/:cmd', (req, res) => {
     case 'clear':
       for (const k of Object.keys(pixels)) delete pixels[k];
       io.emit('clear');
+      saveNow();
       return res.json({ ok: true, msg: 'Canvas cleared' });
+    case 'export':
+      return res.json(pixels);
+    case 'import': {
+      const body = req.body;
+      if (typeof body !== 'object' || Array.isArray(body))
+        return res.status(400).json({ error: 'Expected JSON object' });
+      for (const k of Object.keys(pixels)) delete pixels[k];
+      for (const [key, color] of Object.entries(body)) {
+        if (typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) continue;
+        const [x, y] = key.split(',').map(Number);
+        if (x >= 0 && x < CANVAS_W && y >= 0 && y < CANVAS_H) pixels[key] = color;
+      }
+      io.emit('canvas-data', pixels);
+      saveNow();
+      return res.json({ ok: true, count: Object.keys(pixels).length });
+    }
     case 'users':
       return res.json(Object.values(users));
     case 'kick': {
@@ -130,6 +173,7 @@ io.on('connection', socket => {
       else if (typeof p.color === 'string' && /^#[0-9a-f]{6}$/i.test(p.color)) pixels[key] = p.color;
     }
     socket.broadcast.emit('pixels', { batch, userId: socket.id });
+  scheduleSave();
   });
 
   // Cursor
@@ -236,6 +280,7 @@ function startCLI() {
       case 'clear':
         for (const k of Object.keys(pixels)) delete pixels[k];
         io.emit('clear');
+        saveNow();
         console.log('Canvas cleared.');
         break;
       case 'users': {

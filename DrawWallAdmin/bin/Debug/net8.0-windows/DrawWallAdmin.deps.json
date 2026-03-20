@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "DrawWallAdmin/1.0.0": {
+        "runtime": {
+          "DrawWallAdmin.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "DrawWallAdmin/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
