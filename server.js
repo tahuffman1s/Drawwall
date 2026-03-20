@@ -80,13 +80,17 @@ app.get('/api/gifs', (req, res) => {
     apiRes.on('end', () => {
       try {
         const json = JSON.parse(data);
-        if (json.meta?.status === 403) return res.status(403).json({ error: 'Invalid Giphy API key. Check your GIPHY_KEY environment variable.' });
+        const status = json.meta?.status;
+        if (status && status !== 200) {
+          console.error(`Giphy API error: ${status} ${json.meta?.msg}`);
+          return res.status(502).json({ error: `Giphy error ${status}: ${json.meta?.msg || 'unknown'}. Check your GIPHY_KEY.` });
+        }
         const gifs = (json.data || []).map(r => ({
           preview : r.images?.fixed_height_small?.url || '',
           url     : r.images?.original?.url           || '',
         })).filter(g => g.url);
         res.json(gifs);
-      } catch { res.json([]); }
+      } catch (e) { console.error('Giphy parse error:', e); res.json([]); }
     });
   }).on('error', () => res.json([]));
 });
