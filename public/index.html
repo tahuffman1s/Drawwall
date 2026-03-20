@@ -710,7 +710,8 @@ const PALETTE = [
 const SERVER_URL = 'https://drawwall-production.up.railway.app';
 
 // ── State ─────────────────────────────────────────────────────────────────────
-const socket = SERVER_URL ? io(SERVER_URL) : io();
+const _ioAuth = { auth: { name: localStorage.getItem('drawwall-name') || '' } };
+const socket = SERVER_URL ? io(SERVER_URL, _ioAuth) : io(_ioAuth);
 let myId = null;
 let CANVAS_W = 1, CANVAS_H = 1; // set by server on init
 
@@ -1302,7 +1303,10 @@ document.getElementById('png-btn').addEventListener('click', () => {
 
 function submitName() {
   const v = document.getElementById('name-in').value.trim();
-  if (v) socket.emit('set-name', v);
+  if (v) {
+    socket.emit('set-name', v);
+    localStorage.setItem('drawwall-name', v);
+  }
 }
 document.getElementById('name-btn').addEventListener('click', submitName);
 document.getElementById('name-in').addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
@@ -1334,6 +1338,8 @@ socket.on('init', ({ userId, name, color, users: au, pixels: ap, size, customEmo
   myId = userId;
   CANVAS_W = size.w;
   CANVAS_H = size.h;
+
+  // Server already used our saved name from handshake auth; just reflect it in the input
   document.getElementById('name-in').value = name;
   Object.assign(users, au);
   renderUsers();

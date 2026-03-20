@@ -37,9 +37,12 @@ function saveNow() {
   fs.writeFileSync(SAVE_FILE, JSON.stringify(pixels));
 }
 
-// Save on shutdown
-process.on('exit',   saveNow);
-process.on('SIGINT', () => { saveNow(); process.exit(); });
+// Save on shutdown (Railway sends SIGTERM, local Ctrl+C sends SIGINT)
+process.on('exit',             saveNow);
+process.on('SIGINT',           () => { saveNow(); process.exit(0); });
+process.on('SIGTERM',          () => { saveNow(); process.exit(0); });
+process.on('uncaughtException', e  => { console.error('Uncaught:', e); saveNow(); process.exit(1); });
+process.on('unhandledRejection', e => { console.error('Unhandled:', e); saveNow(); });
 
 // ── User state ────────────────────────────────────────────────────────────────
 const users = {};
@@ -152,7 +155,8 @@ app.get('/admin/:cmd', (req, res) => {
 // ── Sockets ───────────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   const color = pickColor();
-  const name  = `Artist ${Math.floor(1000 + Math.random() * 9000)}`;
+  const authName = (socket.handshake.auth?.name || '').replace(/[\x00-\x1f]/g, '').trim().slice(0, 24);
+  const name  = authName || `Artist ${Math.floor(1000 + Math.random() * 9000)}`;
   users[socket.id] = { id: socket.id, name, color };
 
   socket.emit('init', {
@@ -239,6 +243,13 @@ io.on('connection', socket => {
     const u = users[socket.id];
     if (!u || typeof name !== 'string') return;
     u.name = name.replace(/[\x00-\x1f]/g, '').trim().slice(0, 24) || u.name;
+    io.emit('user-updated', u);
+  });
+
+  socket.on('set-color', color => {
+    const u = users[socket.id];
+    if (!u || typeof color !== 'string' || !/^#[0-9a-f]{6}$/i.test(color)) return;
+    u.color = color;
     io.emit('user-updated', u);
   });
 
