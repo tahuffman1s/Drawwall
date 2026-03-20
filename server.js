@@ -65,20 +65,21 @@ const MAX_MESSAGES = 200;
 const customEmojis = {};  // name -> dataUrl
 
 // ── GIF search proxy ──────────────────────────────────────────────────────────
-const TENOR_KEY = process.env.TENOR_KEY || 'LIVDSRZULELA';
+// Set GIPHY_KEY env var to your Giphy API key (get one free at developers.giphy.com)
+const GIPHY_KEY = process.env.GIPHY_KEY || 'dc6zaTOxFJmzC';
 
 app.get('/api/gifs', (req, res) => {
   const q   = encodeURIComponent((req.query.q || 'funny').slice(0, 100));
-  const url = `https://g.tenor.com/v1/search?key=${TENOR_KEY}&q=${q}&limit=24&contentfilter=medium&mediafilter=minimal`;
+  const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${q}&limit=24&rating=g`;
   https.get(url, apiRes => {
     let data = '';
     apiRes.on('data', c => data += c);
     apiRes.on('end', () => {
       try {
         const json = JSON.parse(data);
-        const gifs = (json.results || []).map(r => ({
-          preview : r.media?.[0]?.tinygif?.url  || '',
-          url     : r.media?.[0]?.gif?.url      || '',
+        const gifs = (json.data || []).map(r => ({
+          preview : r.images?.fixed_height_small?.url || '',
+          url     : r.images?.original?.url           || '',
         })).filter(g => g.url);
         res.json(gifs);
       } catch { res.json([]); }

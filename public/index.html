@@ -1169,27 +1169,43 @@ function buildFloatingCanvas() {
   }
 }
 function liftSelection() {
+  // If there are already floating pixels (e.g. from paste), absorb them into
+  // pixelData/offCtx first so they get lifted along with everything else.
+  if (floatingPixels) {
+    for (const [rel, color] of floatingPixels) {
+      const [dx, dy] = rel.split(',').map(Number);
+      const ax = selX0 + dx, ay = selY0 + dy;
+      if (ax >= 0 && ax < CANVAS_W && ay >= 0 && ay < CANVAS_H) {
+        pixelData.set(`${ax},${ay}`, color);
+        offCtx.fillStyle = color; offCtx.fillRect(ax, ay, 1, 1);
+      }
+    }
+    floatingPixels = null; floatingCanvas = null;
+  }
+
   floatingOriginX = selX0; floatingOriginY = selY0;
   floatingPixels = new Map();
+  const eraseBatch = [];
   for (let y = selY0; y <= selY1; y++) {
     for (let x = selX0; x <= selX1; x++) {
-      const color = pixelData.get(`${x},${y}`);
-      if (color) floatingPixels.set(`${x - selX0},${y - selY0}`, color);
-      pixelData.delete(`${x},${y}`);
+      const key = `${x},${y}`;
+      const color = pixelData.get(key);
+      if (color) {
+        floatingPixels.set(`${x - selX0},${y - selY0}`, color);
+        if (x >= 0 && x < CANVAS_W && y >= 0 && y < CANVAS_H)
+          eraseBatch.push({ x, y, erase: true });
+      }
+      pixelData.delete(key);
       offCtx.fillStyle = '#ffffff'; offCtx.fillRect(x, y, 1, 1);
     }
   }
+  // Erase originals immediately so other clients see the cut right away
+  if (eraseBatch.length) socket.emit('pixels', eraseBatch);
   buildFloatingCanvas();
 }
 function commitFloating() {
   if (!floatingPixels) return;
   const batch = [];
-  for (const [rel] of floatingPixels) {
-    const [dx, dy] = rel.split(',').map(Number);
-    const ox = floatingOriginX + dx, oy = floatingOriginY + dy;
-    if (ox >= 0 && ox < CANVAS_W && oy >= 0 && oy < CANVAS_H)
-      batch.push({ x: ox, y: oy, erase: true });
-  }
   for (const [rel, color] of floatingPixels) {
     const [dx, dy] = rel.split(',').map(Number);
     const nx = selX0 + dx, ny = selY0 + dy;
