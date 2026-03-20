@@ -731,6 +731,7 @@ let selX0 = 0, selY0 = 0, selX1 = 0, selY1 = 0;
 let floatingPixels = null;   // Map<"dx,dy", color>
 let floatingCanvas = null;
 let floatingOriginX = 0, floatingOriginY = 0;
+let lastPlaced = null;       // { x0,y0,x1,y1, pixels: Map } — pixels committed by last commitFloating
 let clipboard = null;        // { pixels: Map, w, h }
 let marchOffset = 0, marchTimer = null;
 let hoverPx = -1, hoverPy = -1;
@@ -1036,6 +1037,7 @@ canvas.addEventListener('mousedown', e => {
         liftSelection();
       } else {
         commitFloating();
+        lastPlaced = null;
         selState = 'selecting';
         selX0 = selX1 = px; selY0 = selY1 = py;
         startMarching();
@@ -1169,8 +1171,8 @@ function buildFloatingCanvas() {
   }
 }
 function liftSelection() {
-  // If there are already floating pixels (e.g. from paste), absorb them into
-  // pixelData/offCtx first so they get lifted along with everything else.
+  // Absorb any existing floating pixels (e.g. from paste) into offCtx/pixelData
+  // so they can be lifted along with permanent pixels below.
   if (floatingPixels) {
     for (const [rel, color] of floatingPixels) {
       const [dx, dy] = rel.split(',').map(Number);
@@ -1183,29 +1185,56 @@ function liftSelection() {
     floatingPixels = null; floatingCanvas = null;
   }
 
+  // If re-lifting from the exact position of the last commit, only pick up
+  // the pixels we just placed — not whatever was already beneath them.
+  const prev = lastPlaced;
+  lastPlaced = null;
+  const useMask = prev && prev.x0 === selX0 && prev.y0 === selY0 &&
+                           prev.x1 === selX1 && prev.y1 === selY1;
+
   floatingOriginX = selX0; floatingOriginY = selY0;
   floatingPixels = new Map();
   const eraseBatch = [];
-  for (let y = selY0; y <= selY1; y++) {
-    for (let x = selX0; x <= selX1; x++) {
-      const key = `${x},${y}`;
+
+  if (useMask) {
+    // Only lift the previously-placed pixels; leave underlying pixels in place.
+    for (const [rel] of prev.pixels) {
+      const [dx, dy] = rel.split(',').map(Number);
+      const ax = selX0 + dx, ay = selY0 + dy;
+      const key = `${ax},${ay}`;
       const color = pixelData.get(key);
       if (color) {
-        floatingPixels.set(`${x - selX0},${y - selY0}`, color);
-        if (x >= 0 && x < CANVAS_W && y >= 0 && y < CANVAS_H)
-          eraseBatch.push({ x, y, erase: true });
+        floatingPixels.set(rel, color);
+        pixelData.delete(key);
+        offCtx.fillStyle = '#ffffff'; offCtx.fillRect(ax, ay, 1, 1);
+        if (ax >= 0 && ax < CANVAS_W && ay >= 0 && ay < CANVAS_H)
+          eraseBatch.push({ x: ax, y: ay, erase: true });
       }
-      pixelData.delete(key);
-      offCtx.fillStyle = '#ffffff'; offCtx.fillRect(x, y, 1, 1);
+    }
+  } else {
+    // Normal lift: pick up everything in the bounding box.
+    for (let y = selY0; y <= selY1; y++) {
+      for (let x = selX0; x <= selX1; x++) {
+        const key = `${x},${y}`;
+        const color = pixelData.get(key);
+        if (color) {
+          floatingPixels.set(`${x - selX0},${y - selY0}`, color);
+          if (x >= 0 && x < CANVAS_W && y >= 0 && y < CANVAS_H)
+            eraseBatch.push({ x, y, erase: true });
+        }
+        pixelData.delete(key);
+        offCtx.fillStyle = '#ffffff'; offCtx.fillRect(x, y, 1, 1);
+      }
     }
   }
-  // Erase originals immediately so other clients see the cut right away
+
   if (eraseBatch.length) socket.emit('pixels', eraseBatch);
   buildFloatingCanvas();
 }
 function commitFloating() {
   if (!floatingPixels) return;
   const batch = [];
+  const placed = new Map();
   for (const [rel, color] of floatingPixels) {
     const [dx, dy] = rel.split(',').map(Number);
     const nx = selX0 + dx, ny = selY0 + dy;
@@ -1213,9 +1242,12 @@ function commitFloating() {
       pixelData.set(`${nx},${ny}`, color);
       offCtx.fillStyle = color; offCtx.fillRect(nx, ny, 1, 1);
       batch.push({ x: nx, y: ny, color });
+      placed.set(rel, color);
     }
   }
   if (batch.length) socket.emit('pixels', batch);
+  // Remember what was placed so the next re-lift only picks up these pixels.
+  lastPlaced = { x0: selX0, y0: selY0, x1: selX1, y1: selY1, pixels: placed };
   floatingPixels = null; floatingCanvas = null;
 }
 function deselect() {
@@ -1642,7 +1674,9 @@ async function searchGifs(q) {
   gifGrid.innerHTML = '<div id="gif-status">Searching…</div>';
   try {
     const res  = await fetch(`${SERVER_URL}/api/gifs?q=${encodeURIComponent(q)}`);
-    const gifs = await res.json();
+    const data = await res.json();
+    if (data.error) { gifGrid.innerHTML = `<div id="gif-status">${data.error}</div>`; return; }
+    const gifs = data;
     gifGrid.innerHTML = '';
     if (!gifs.length) { gifGrid.innerHTML = '<div id="gif-status">No results</div>'; return; }
     gifs.forEach(g => {

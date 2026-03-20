@@ -66,9 +66,10 @@ const customEmojis = {};  // name -> dataUrl
 
 // ── GIF search proxy ──────────────────────────────────────────────────────────
 // Set GIPHY_KEY env var to your Giphy API key (get one free at developers.giphy.com)
-const GIPHY_KEY = process.env.GIPHY_KEY || 'dc6zaTOxFJmzC';
+const GIPHY_KEY = process.env.GIPHY_KEY || '';
 
 app.get('/api/gifs', (req, res) => {
+  if (!GIPHY_KEY) return res.status(503).json({ error: 'GIF search is not configured. Set the GIPHY_KEY environment variable (free key at developers.giphy.com).' });
   const q   = encodeURIComponent((req.query.q || 'funny').slice(0, 100));
   const url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${q}&limit=24&rating=g`;
   https.get(url, apiRes => {
@@ -77,6 +78,7 @@ app.get('/api/gifs', (req, res) => {
     apiRes.on('end', () => {
       try {
         const json = JSON.parse(data);
+        if (json.meta?.status === 403) return res.status(403).json({ error: 'Invalid Giphy API key. Check your GIPHY_KEY environment variable.' });
         const gifs = (json.data || []).map(r => ({
           preview : r.images?.fixed_height_small?.url || '',
           url     : r.images?.original?.url           || '',
