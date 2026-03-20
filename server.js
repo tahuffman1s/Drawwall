@@ -57,6 +57,55 @@ app.get('/api/gifs', (req, res) => {
   }).on('error', () => res.json([]));
 });
 
+// ── Admin API ─────────────────────────────────────────────────────────────────
+const ADMIN_KEY = process.env.ADMIN_KEY || 'changeme';
+
+app.get('/admin/:cmd', (req, res) => {
+  if (req.query.key !== ADMIN_KEY) return res.status(403).json({ error: 'Forbidden' });
+  const { cmd } = req.params;
+  switch (cmd) {
+    case 'clear':
+      for (const k of Object.keys(pixels)) delete pixels[k];
+      io.emit('clear');
+      return res.json({ ok: true, msg: 'Canvas cleared' });
+    case 'users':
+      return res.json(Object.values(users));
+    case 'kick': {
+      const target = (req.query.target || '').toLowerCase();
+      if (!target) return res.status(400).json({ error: 'Missing target' });
+      const match = Object.values(users).find(u =>
+        u.name.toLowerCase() === target || u.id.toLowerCase().startsWith(target));
+      if (!match) return res.status(404).json({ error: `No user matching "${target}"` });
+      io.sockets.sockets.get(match.id)?.disconnect(true);
+      return res.json({ ok: true, msg: `Kicked ${match.name}` });
+    }
+    case 'announce': {
+      const msg = req.query.msg || '';
+      if (!msg) return res.status(400).json({ error: 'Missing msg' });
+      io.emit('announce', msg);
+      return res.json({ ok: true, msg: `Announced: "${msg}"` });
+    }
+    case 'chat': {
+      const msg = req.query.msg || '';
+      if (!msg) return res.status(400).json({ error: 'Missing msg' });
+      const id = ++msgSeq;
+      io.emit('chat', { id, userId: null, name: 'Server', color: '#f0c040', text: msg, gif: '', ts: Date.now() });
+      return res.json({ ok: true, msg: `[Server] ${msg}` });
+    }
+    case 'pixels':
+      return res.json({ count: Object.keys(pixels).length });
+    case 'status':
+      return res.json({
+        users: Object.keys(users).length,
+        pixels: Object.keys(pixels).length,
+        canvas: `${CANVAS_W}×${CANVAS_H}`,
+        customEmojis: Object.keys(customEmojis).length,
+      });
+    default:
+      return res.status(404).json({ error: `Unknown command "${cmd}"` });
+  }
+});
+
 // ── Sockets ───────────────────────────────────────────────────────────────────
 io.on('connection', socket => {
   const color = pickColor();

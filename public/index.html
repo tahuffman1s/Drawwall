@@ -124,6 +124,29 @@
     #cc { width: 24px; height: 18px; border: 2px solid #333; cursor: pointer; padding: 0; }
     #cc-lbl { font-size: 0.42rem; color: #444; font-family: 'Press Start 2P', monospace; }
 
+    /* ── Size ── */
+    #size-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    #size-slider {
+      flex: 1; height: 4px; cursor: pointer; accent-color: #f0c040;
+      appearance: none; -webkit-appearance: none;
+      background: linear-gradient(to right, #f0c040 0%, #f0c040 var(--pct,6.25%), #2a2030 var(--pct,6.25%));
+      border-radius: 0; outline: none;
+    }
+    #size-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 10px; height: 14px;
+      background: #f0c040; cursor: pointer; border: none;
+      box-shadow: 1px 1px 0 #080510;
+    }
+    #size-slider::-moz-range-thumb {
+      width: 10px; height: 14px; background: #f0c040;
+      cursor: pointer; border: none; border-radius: 0;
+    }
+    #size-lbl {
+      font-size: 0.42rem; color: #f0c040; min-width: 18px; text-align: right;
+      font-family: 'Press Start 2P', monospace;
+      text-shadow: 0 0 6px rgba(240,192,64,0.6);
+    }
+
     /* ── Zoom ── */
     #zoom-row { display: flex; align-items: center; gap: 4px; }
     .zbtn {
@@ -524,6 +547,14 @@
   </div>
 
   <div>
+    <div class="lbl">Size</div>
+    <div id="size-row">
+      <input type="range" id="size-slider" min="1" max="16" value="1" step="1"/>
+      <span id="size-lbl">1</span>
+    </div>
+  </div>
+
+  <div>
     <div class="lbl">Color</div>
     <div id="palette"></div>
     <div id="cc-row">
@@ -618,7 +649,7 @@
 <div id="zoom-hud">1×</div>
 <div id="hint-hud">Scroll: zoom · Space/Right-click: pan</div>
 
-<script src="/socket.io/socket.io.js"></script>
+<script src="https://drawwall-production.up.railway.app/socket.io/socket.io.js"></script>
 <script>
 const PALETTE = [
   '#000000','#2d2d2d','#5a5a5a','#888888','#c0c0c0','#ffffff',
@@ -631,7 +662,7 @@ const PALETTE = [
 // ── Server config ─────────────────────────────────────────────────────────────
 // Set SERVER_URL to connect to a remote server, e.g. 'http://192.168.1.50:3000'
 // Leave empty to connect to the same host that served this page.
-const SERVER_URL = '';
+const SERVER_URL = 'https://drawwall-production.up.railway.app';
 
 // ── State ─────────────────────────────────────────────────────────────────────
 const socket = SERVER_URL ? io(SERVER_URL) : io();
@@ -642,7 +673,7 @@ let cellSize = 1;
 const MIN_CELL = 1, MAX_CELL = 64;
 let offsetX = 0, offsetY = 0;
 
-let tool = 'pen', penColor = '#000000';
+let tool = 'pen', penColor = '#000000', penSize = 1;
 let isDrawing = false, isPanning = false, spaceDown = false;
 let panSX = 0, panSY = 0, panOX = 0, panOY = 0;
 let lastPx = -1, lastPy = -1;
@@ -742,21 +773,23 @@ function draw() {
     }
   }
 
-  // Hover cell
+  // Hover brush preview
   if (hoverPx >= 0 && hoverPx < CANVAS_W && hoverPy >= 0 && hoverPy < CANVAS_H) {
-    const sx = offsetX + hoverPx * cellSize;
-    const sy = offsetY + hoverPy * cellSize;
+    const half = Math.floor(penSize / 2);
+    const bx = hoverPx - half, by = hoverPy - half;
+    const sx = offsetX + bx * cellSize, sy = offsetY + by * cellSize;
+    const bw = penSize * cellSize, bh = penSize * cellSize;
     if (tool === 'eraser') {
       ctx.strokeStyle = 'rgba(255,60,60,0.9)';
     } else {
       ctx.fillStyle = penColor;
-      ctx.globalAlpha = 0.4;
-      ctx.fillRect(sx, sy, cellSize, cellSize);
+      ctx.globalAlpha = 0.35;
+      ctx.fillRect(sx, sy, bw, bh);
       ctx.globalAlpha = 1;
       ctx.strokeStyle = 'rgba(255,255,255,0.6)';
     }
     ctx.lineWidth = 1;
-    ctx.strokeRect(sx + 0.5, sy + 0.5, cellSize - 1, cellSize - 1);
+    ctx.strokeRect(sx + 0.5, sy + 0.5, bw - 1, bh - 1);
   }
 }
 
@@ -808,11 +841,18 @@ function putPixel(px, py, erase) {
   }, 25);
 }
 
+function putBrush(cx, cy, erase) {
+  const half = Math.floor(penSize / 2);
+  for (let dy = 0; dy < penSize; dy++)
+    for (let dx = 0; dx < penSize; dx++)
+      putPixel(cx - half + dx, cy - half + dy, erase);
+}
+
 function line(x0, y0, x1, y1, erase) {
   let dx = Math.abs(x1-x0), dy = Math.abs(y1-y0);
   let sx = x0<x1?1:-1, sy = y0<y1?1:-1, err = dx-dy;
   for(;;) {
-    putPixel(x0, y0, erase);
+    putBrush(x0, y0, erase);
     if (x0===x1 && y0===y1) break;
     const e2 = 2*err;
     if (e2 > -dy) { err -= dy; x0 += sx; }
@@ -897,6 +937,8 @@ window.addEventListener('keydown', e => {
   if (e.code === 'BracketRight') zoomAt(1,  canvas.width/2, canvas.height/2);
   if (e.code === 'BracketLeft')  zoomAt(-1, canvas.width/2, canvas.height/2);
   if (e.code === 'KeyF') fitToView();
+  if (e.code === 'Comma')  setSize(penSize - 1);
+  if (e.code === 'Period') setSize(penSize + 1);
 });
 window.addEventListener('keyup', e => {
   if (e.code === 'Space') { spaceDown = false; if (!isPanning) canvas.style.cursor = 'crosshair'; }
@@ -909,6 +951,16 @@ function setTool(t) {
   document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === t));
 }
 document.querySelectorAll('.tool-btn').forEach(b => b.addEventListener('click', () => setTool(b.dataset.tool)));
+
+function setSize(n) {
+  penSize = Math.max(1, Math.min(16, n));
+  const slider = document.getElementById('size-slider');
+  slider.value = penSize;
+  slider.style.setProperty('--pct', ((penSize - 1) / 15 * 100).toFixed(2) + '%');
+  document.getElementById('size-lbl').textContent = penSize;
+  redraw();
+}
+document.getElementById('size-slider').addEventListener('input', e => setSize(+e.target.value));
 
 function setColor(c) {
   penColor = c;
